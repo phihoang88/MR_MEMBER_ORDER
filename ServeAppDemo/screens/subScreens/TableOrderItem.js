@@ -17,7 +17,8 @@ const TableOrderItem = (props) => {
         price_show,
         price,
         product_count,
-        product_order_stt_id
+        product_order_stt_id,
+        count
     } = props.order
     const index = props.index
 
@@ -26,21 +27,25 @@ const TableOrderItem = (props) => {
             return <View style={styles('').status}>
                 <TouchableOpacity
                     onPress={() => {
-                        props.onDelete()
-                    }}>
-                    <Icon name="minus-circle" size={18} color={'red'} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                    onPress={() => {
                         props.onConfirm()
                     }}>
-                    <Icon name="check-circle" size={18} color={'green'} />
+                    <Icon name="chevron-circle-down" size={18} color={'green'} />
                 </TouchableOpacity>
+            </View>
+        }
+        else if (stt == 1) {
+            return <View style={styles('').status}>
+                <Icon name="check-circle" size={18} color={'grey'} />
             </View>
         }
         else {
             return <View style={styles('').status}>
-                <Icon name="check-circle" size={18} color={'grey'} />
+                <TouchableOpacity
+                    onPress={() => {
+                        props.onDelete()
+                    }}>
+                    <Icon name="minus-circle" size={18} color={'red'} />
+                </TouchableOpacity>
             </View>
         }
     }
@@ -51,10 +56,10 @@ const TableOrderItem = (props) => {
                 <Text style={styles(product_order_stt_id).tbText}>{index + 1}</Text>
             </View>
             <View style={{ flex: 45 }}>
-                <Text style={styles(product_order_stt_id).tbText}>{product_nm_vn||product_nm_en||product_nm_jp}</Text>
+                <Text style={styles(product_order_stt_id).tbText}>{product_nm_vn || product_nm_en || product_nm_jp}</Text>
             </View>
             <View style={{ flex: 10 }}>
-                <Text style={styles(product_order_stt_id).tbText}>{product_count}</Text>
+                <Text style={styles(product_order_stt_id).tbText}>{product_count || count}</Text>
             </View>
             <View style={{ flex: 15 }}>
                 <Text style={styles(product_order_stt_id).tbText}>{price || price_show}</Text>
