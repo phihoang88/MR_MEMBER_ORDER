@@ -19,8 +19,8 @@ const MenuItem = (props) => {
 
     const { onPress } = props
     return <View style={{
-        borderTopWidth: 0.5,
-        borderBottomWidth: 0.5,
+        borderTopWidth: 1,
+        borderBottomWidth: 1,
     }}>
         <TouchableOpacity
             style={{

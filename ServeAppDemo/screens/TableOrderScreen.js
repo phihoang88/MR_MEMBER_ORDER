@@ -9,21 +9,16 @@ import {
     FlatList,
     StyleSheet,
 } from 'react-native'
-import { apis, colors } from '../config'
+import { apis, colors, system } from '../config'
 import {
     useFocusEffect
-} from '@react-navigation/native';
+} from '@react-navigation/native'
 import Icon from 'react-native-vector-icons/FontAwesome5'
-import TableOrderItem from './subScreens/TableOrderItem'
-import MenuItem from './subScreens/MenuItem'
-import MealItem from './subScreens/MealItem'
+import { MealItem, MenuItem,TableOrderItem } from '../screens'
 import { ModalDialog } from '../components'
-import axios from 'axios';
-
+import axios from 'axios'
 
 const TableOrderScreen = (props) => {
-
-
 
     //<-----------------------initLoad--------------------------->START
     //set move screen navigate
@@ -31,7 +26,7 @@ const TableOrderScreen = (props) => {
     const { navigate, goBack } = navigation
 
     //get pass params
-    const table_info_id = route.params.table_info_id
+    const table_id = route.params.table_id
     const table_nm = route.params.table_nm
     const table_stt = route.params.table_stt
 
@@ -46,28 +41,39 @@ const TableOrderScreen = (props) => {
     const [listAllProduct, setListAllProduct] = useState([])
     //set init list product by menu id
     const [listProductById, setListProductById] = useState([])
-
-
-
+    //set button Create/Order
+    const [tableInfoId, setTableInfoId] = useState(route.params.table_info_id)
 
     //set disable load list order
     const [isFetchingOrderLstTmp, setFetchingOrderLstTmp] = useState(false)
 
+    //set init select item order
+    const [selectOrderId, setSelectOrderId] = useState('')
 
 
     //init load
     useEffect(() => {
         //initload
-        //load list menu
-        callGetListMenu()
-        callGetAllMealList()
-        if (table_stt == 'Serving' || table_stt == 'Ordering') {
-            callGetAllMealOrderList()
-        }
-        else {
-            setListOrderTmp([])
+        if (tableInfoId != null) {
+            //load list menu
+            callGetListMenu()
+            callGetAllMealList()
+            if (table_stt == 'Serving' || table_stt == 'Ordering') {
+                callGetAllMealOrderList(tableInfoId)
+            }
+            else {
+                setListOrderTmp([])
+            }
         }
     }, [navigate])
+
+    //run after create table success
+    useEffect(() => {
+        if (tableInfoId != null) {
+            callGetListMenu()
+            callGetAllMealList()
+        }
+    }, [tableInfoId])
 
     //run when menu change
     useEffect(() => {
@@ -78,22 +84,15 @@ const TableOrderScreen = (props) => {
         }
     }, [selectedMenuId, listAllProduct])
 
-
-
-
-
-
-
+    //run after add product to list
     useEffect(() => {
         setFetchingOrderLstTmp(false)
     }, [isFetchingOrderLstTmp])
 
+    useEffect(() => {
+        callPutUpdateDoneOrder()
+    },[selectOrderId])
     //<-----------------------initLoad--------------------------->END
-
-
-
-
-
 
 
     //<-----------------------Function---------------------------->
@@ -116,7 +115,7 @@ const TableOrderScreen = (props) => {
         }
     }
 
-    //get List Meal by Menu Id
+    //get All Product List 
     const callGetAllMealList = async () => {
         try {
             const res = await axios.get(`${apis.PRODUCT_PATH}/getList`)
@@ -132,15 +131,15 @@ const TableOrderScreen = (props) => {
     }
 
     //get List Order of Table by table_id, table_status_id, 
-    const callGetAllMealOrderList = async () => {
+    const callGetAllMealOrderList = async (tableInfoId) => {
         try {
-            // const res = await axios.get(`${apis.PRODUCT_PATH}/getList`)
-            // if (res.data.status == 'success') {
-            //     setListAllProduct(res.data.data)
-            // }
-            // else {
-            //     setListAllProduct([])
-            // }
+            const res = await axios.get(`${apis.TABLE_PATH}/getOrderingList/${tableInfoId}`)
+            if (res.data.status == 'success') {
+                setListOrderTmp(res.data.data)
+            }
+            else {
+                goBack()
+            }
         } catch (error) {
             console.log(`callGetAllMealOrderList ${error.message}`)
         }
@@ -149,37 +148,70 @@ const TableOrderScreen = (props) => {
     //callPost insert order list to DB
     const callPostInsertOrders = async () => {
         try {
-            let orderList = listOrderTmp.filter(item => item.product_order_stt_id == 0)
-                                        .map(item => ({
-                                            "tableInfoId" : table_info_id,
-                                            "productId" : item.product_id,
-                                            "count" : item.product_count,
-                                            "productOrderSttId" : item.product_order_stt_id,
-                                            "orderDt" : getSystemDatetime(),
-                                            "doneDt" : "",
-                                            "crtDt" : getSystemDatetime(),
-                                            "crtUserId" : "huy",
-                                            "crtPgmId" : "table order",
-                                            "updDt" : "",
-                                            "updUserId" : "",
-                                            "updPgmId" : "",
-                                            "delFg" : "0"
-                                        })) 
-            const res = await axios.post(`${apis.TABLE_PATH}/insertOrders`,orderList)
-            res.data.status == 'success' ? alert('success') : alert('failed')
+            let orderList = listOrderTmp.filter(item => item.product_order_stt_id == null)
+                .map(item => ({
+                    "tableInfoId": tableInfoId,
+                    "productId": item.product_id,
+                    "count": item.product_count,
+                    "productOrderSttId": "0",
+                    "orderDt": system.systemDateTimeString(),
+                    "crtDt": system.systemDateTimeString(),
+                    "crtUserId": "huy",
+                    "crtPgmId": "table order",
+                    "delFg": "0"
+                }))
+            if (orderList.length == 0) {
+                alert('No order in list')
+            }
+            else {
+                const res = await axios.post(`${apis.TABLE_PATH}/insertOrders`, orderList)
+                res.data.status == 'success' ? callGetAllMealOrderList(tableInfoId) : alert('failed')
+            }
+        } catch (error) {
+            console.log(`callPostInsertOrders ${error.message}`)
+        }
+    }
+
+    //callPost insert order list to DB
+    const callPostInsertTableInfo = async () => {
+        try {
+            const res = await axios.post(`${apis.TABLE_PATH}/insertInfos`, {
+                "tableId": table_id,
+                "tableSttId": "4",
+                "serveDatetime": system.systemDateTimeString(),
+                "isEnd": "0",
+                "crtDt": system.systemDateTimeString(),
+                "crtUserId": "huy",
+                "crtPgmId": "order",
+                "delFg": "0"
+            })
+            res.data.status == 'success' ? setTableInfoId(res.data.data.id) : goBack()
         } catch (error) {
             console.log(error)
         }
     }
 
+    //callPut update done order to DB
+    const callPutUpdateDoneOrder = async () => {
+        try {
+            const res = await axios.put(`${apis.TABLE_PATH}/doneOrder/${selectOrderId}`)
+            res.data.status == 'success' ? callGetAllMealOrderList(tableInfoId) : alert('Order request failed!')
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+     //set List order temp
+     function setOrderTmpByAmount(data) {
+        setFetchingOrderLstTmp(true)
+        data.index = listOrderTmp.length + 1 //key row
+        data.product_order_stt_id = null     //not yet order
+        data.product_count = 1
+        listOrderTmp.push(data)
+        setListOrderTmp(listOrderTmp)
+    }
+
     //<-----------------------Function---------------------------->
-
-
-
-
-
-
-
 
 
 
@@ -194,48 +226,7 @@ const TableOrderScreen = (props) => {
 
 
 
-
-    function setOrderTmpByAmount(data) {
-
-        setFetchingOrderLstTmp(true)
-
-        data.index = listOrderTmp.length + 1 //key row
-        data.product_order_stt_id = 0        //not yet order
-        data.product_count = 1
-        listOrderTmp.push(data)
-        setListOrderTmp(listOrderTmp)
-
-        // const found = listOrderTmp.some(element => element.product_id == data.product_id)
-        // if (!found) {
-        //     listOrderTmp.push(data.data)
-        // }
-        // else {
-        //     //Find index of specific object using findIndex method.    
-        //     let objIndex = listOrderTmp.findIndex(obj => obj.product_id == data.product_id)
-
-        //     //Update object's name property.
-        //     listOrderTmp[objIndex].meal_count = data.meal_count
-        // }
-    }
-
-
-
-
-
-
-
-    function getSystemDatetime(){
-        let date = new Date()
-        let month = date.getMonth() + 1 < 10 ? `0${date.getMonth() + 1}` : date.getMonth() + 1
-        let day = date.getDate() < 10 ? `0${date.getDate()}` : date.getDate()
-        let hours = date.getHours() < 10 ? `0${date.getHours()}` : date.getHours()
-        let minutes = date.getMinutes() < 10 ? `0${date.getMinutes()}` : date.getMinutes()
-        return `${date.getFullYear()}${month}${day}${hours}${minutes}}`
-    }
-
-
-
-
+   
 
     // useFocusEffect get called each time when screen comes in focus
     useFocusEffect(
@@ -274,6 +265,7 @@ const TableOrderScreen = (props) => {
                     <Icon name="chevron-left" size={18} color={'grey'}></Icon>
                 </TouchableOpacity>
             </View>
+
             {/* tabbar content */}
             <View style={styles.tabbar_title}>
                 <Text style={styles.label}>
@@ -283,51 +275,50 @@ const TableOrderScreen = (props) => {
                     {table_nm}
                 </Text>
             </View>
+
             {/* order button */}
             <View style={{
                 flex: 20,
                 margin: 10,
             }}>
-                <TouchableOpacity 
-                onPress={() => {
-                    
-                }}
-                style={{
-                    flex: 1,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    borderRadius: 15,
-                    flexDirection:'row'
-                }}>
-                    <Icon name="vote-yea" size={20} color={'green'}>
-
-                    </Icon>
-                    <Text>
-                        create table
-                    </Text>
-                </TouchableOpacity>
-            </View>
-            <View style={{
-                flex: 20,
-                margin: 10,
-            }}>
-                <TouchableOpacity 
-                onPress={() => {
-                    callPostInsertOrders()
-                }}
-                style={{
-                    flex: 1,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    borderRadius: 15,
-                    backgroundColor: 'orangered',
-                }}>
+                <TouchableOpacity
+                    onPress={() => {
+                        callPostInsertOrders()
+                    }}
+                    style={{
+                        flex: 1,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        borderRadius: 15,
+                        backgroundColor: 'orangered',
+                        display: tableInfoId ? 'flex' : 'none'
+                    }}>
                     <Text style={{
                         fontSize: 15,
                         fontWeight: 'bold',
                         color: 'yellow'
                     }}
-                    >ORDER</Text>
+                    >Order</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    onPress={() => {
+                        callPostInsertTableInfo()
+                    }}
+                    style={{
+                        flex: 1,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        borderRadius: 15,
+                        backgroundColor: 'green',
+                        display: tableInfoId ? 'none' : 'flex'
+                    }}>
+                    <Text style={{
+                        fontSize: 15,
+                        fontWeight: 'bold',
+                        color: 'yellow'
+                    }}
+                    >Create</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -369,6 +360,7 @@ const TableOrderScreen = (props) => {
                                     //setVisibleDialogDelete(true)
                                 }}
                                 onConfirm={() => {
+                                    setSelectOrderId(item.table_order_id)
                                     //setVisibleDialogConfirm(true)
                                 }}
                             />}
@@ -464,9 +456,12 @@ const TableOrderScreen = (props) => {
                             </View>
                         </View>
                         <View style={{
-                            display: listMenu == '' ? 'flex' : 'none'
+                            display: listMenu == '' ? 'flex' : 'none',
+                            justifyContent: 'center',
+                            alignItems: 'center'
                         }}>
-                            <Text>Menu Not Found!</Text>
+                            <Text>{tableInfoId ? 'Menu Not Found!' :
+                                'Please click [Create] button to start order.'}</Text>
                         </View>
 
                         {/* Content Table */}
@@ -487,9 +482,6 @@ const TableOrderScreen = (props) => {
             </View>
 
         </View>
-
-
-
     </View>
 }
 
@@ -547,10 +539,6 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
         alignSelf: 'flex-start'
     },
-
-
 })
-
-
 
 export default TableOrderScreen

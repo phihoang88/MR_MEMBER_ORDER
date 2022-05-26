@@ -38,13 +38,7 @@ const MealItem = (props) => {
                 </TouchableOpacity>
             </View>
         </View>
-        <View style={{
-            height: 1,
-            width: '100%',
-            backgroundColor: 'black',
-            marginBottom: 5,
-        }}>
-        </View>
+        
     </View>
 }
 
@@ -53,6 +47,7 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         marginBottom: 5,
+        borderBottomWidth:1
     },
     image_bg: {
         flex: 25,

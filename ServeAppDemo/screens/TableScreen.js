@@ -27,7 +27,6 @@ const TableScreen = (props) => {
         });
         //initload
         callGet()
-
         return unsubscribe;
     }, [navigation])
 
@@ -71,6 +70,7 @@ const TableScreen = (props) => {
                         key={item.table_info_id}
                         onPress={() => {
                             navigate('TableOrderScreen', {
+                                'table_id': item.table_id,
                                 'table_info_id': item.table_info_id,
                                 'table_nm': item.table_nm_vn,
                                 'table_stt': item.table_stt_nm,
