@@ -9,13 +9,13 @@ import {
     FlatList,
     StyleSheet,
 } from 'react-native'
-import { apis, colors, system } from '../config'
+import { apis, colors, system, contents } from '../config'
 import {
     useFocusEffect
 } from '@react-navigation/native'
 import Icon from 'react-native-vector-icons/FontAwesome5'
-import { MealItem, MenuItem,TableOrderItem } from '../screens'
-import { ModalDialog } from '../components'
+import { MealItem, MenuItem, TableOrderItem } from '../screens'
+import { ModalDialog, Toast } from '../components'
 import axios from 'axios'
 
 const TableOrderScreen = (props) => {
@@ -49,7 +49,19 @@ const TableOrderScreen = (props) => {
 
     //set init select item order
     const [selectOrderId, setSelectOrderId] = useState('')
+    const [selectedOrderIndex, setSelectedOrderIndex] = useState('')
 
+    //set init progress update table
+    const [isDoneUpdateOrder, setDoneUpdateOrder] = useState(false)
+
+    //set init show Dialog
+    const [isShowCreateTable, setShowCreateTable] = useState(false)
+    const [isShowRemoveProduct, setShowRemoveProduct] = useState(false)
+    const [isShowOrderConfirm, setShowOrderConfirm] = useState(false)
+    const [isShowDoneOrder, setShowDoneOrder] = useState(false)
+    const [isNotiNotExistsOrder, setNotiNotExistsOrder] = useState(false)
+    const [isNotiGoBack, setNotiGoBack] = useState(false)
+    const [isNotiOrder, setNotiOrder] = useState(false)
 
     //init load
     useEffect(() => {
@@ -89,9 +101,6 @@ const TableOrderScreen = (props) => {
         setFetchingOrderLstTmp(false)
     }, [isFetchingOrderLstTmp])
 
-    useEffect(() => {
-        callPutUpdateDoneOrder()
-    },[selectOrderId])
     //<-----------------------initLoad--------------------------->END
 
 
@@ -136,6 +145,13 @@ const TableOrderScreen = (props) => {
             const res = await axios.get(`${apis.TABLE_PATH}/getOrderingList/${tableInfoId}`)
             if (res.data.status == 'success') {
                 setListOrderTmp(res.data.data)
+                let foundOrderNotDone = res.data.data.some(element => element.product_order_stt_id != "1")
+                if (!foundOrderNotDone) {
+                    callPutUpdateTableStatus(3)
+                }
+                else {
+                    callPutUpdateTableStatus(4)
+                }
             }
             else {
                 goBack()
@@ -161,11 +177,17 @@ const TableOrderScreen = (props) => {
                     "delFg": "0"
                 }))
             if (orderList.length == 0) {
-                alert('No order in list')
+                setNotiOrder(true)
             }
             else {
                 const res = await axios.post(`${apis.TABLE_PATH}/insertOrders`, orderList)
-                res.data.status == 'success' ? callGetAllMealOrderList(tableInfoId) : alert('failed')
+                if (res.data.status == contents.status_ok) {
+                    callGetAllMealOrderList(tableInfoId)
+                    Toast(contents.msg_success_send_order)
+                }
+                else {
+                    Toast(contents.msg_err_send_order)
+                }
             }
         } catch (error) {
             console.log(`callPostInsertOrders ${error.message}`)
@@ -177,17 +199,24 @@ const TableOrderScreen = (props) => {
         try {
             const res = await axios.post(`${apis.TABLE_PATH}/insertInfos`, {
                 "tableId": table_id,
-                "tableSttId": "4",
-                "serveDatetime": system.systemDateTimeString(),
+                "tableSttId": "4",//Ordering
+                "serveDate": system.systemDateString(),
+                "serveTime": system.systemTimeString(),
                 "isEnd": "0",
                 "crtDt": system.systemDateTimeString(),
                 "crtUserId": "huy",
                 "crtPgmId": "order",
                 "delFg": "0"
             })
-            res.data.status == 'success' ? setTableInfoId(res.data.data.id) : goBack()
+            if (res.data.status == contents.status_ok) {
+                setTableInfoId(res.data.data.id)
+                Toast(contents.msg_success_create_table)
+            }
+            else {
+                Toast(contents.msg_err_create_table)
+            }
         } catch (error) {
-            console.log(error)
+            console.log(`callPostInsertTableInfo ${error}`)
         }
     }
 
@@ -195,38 +224,50 @@ const TableOrderScreen = (props) => {
     const callPutUpdateDoneOrder = async () => {
         try {
             const res = await axios.put(`${apis.TABLE_PATH}/doneOrder/${selectOrderId}`)
-            res.data.status == 'success' ? callGetAllMealOrderList(tableInfoId) : alert('Order request failed!')
+            if (res.data.status == contents.status_ok) {
+                callGetAllMealOrderList(tableInfoId)
+                Toast(contents.msg_success_done_order)
+            }
+            else {
+                Toast(contents.msg_success_done_order)
+            }
         } catch (error) {
-            console.log(error)
+            console.log(`callPutUpdateDoneOrder ${error}`)
         }
     }
 
-     //set List order temp
-     function setOrderTmpByAmount(data) {
+    //callPut update done order to DB
+    const callPutUpdateTableStatus = async (tableSttId) => {
+        try {
+            const res = await axios.put(`${apis.TABLE_PATH}/updateStt/${tableInfoId}`, {
+                "tableStatusId": tableSttId
+            })
+            if (res.data.status == contents.status_ok) {
+            }
+            else {
+            }
+        } catch (error) {
+            console.log(`callPutUpdateTableStatus ${error}`)
+        }
+    }
+
+    //set List order temp
+    function setOrderTmpByAmount(data) {
         setFetchingOrderLstTmp(true)
-        data.index = listOrderTmp.length + 1 //key row
         data.product_order_stt_id = null     //not yet order
         data.product_count = 1
         listOrderTmp.push(data)
         setListOrderTmp(listOrderTmp)
     }
 
+    //set List order temp
+    function delOrderTmpByAmount() {
+        setFetchingOrderLstTmp(true)
+        listOrderTmp.splice(selectedOrderIndex, 1)
+        setListOrderTmp(listOrderTmp)
+    }
+
     //<-----------------------Function---------------------------->
-
-
-
-
-    //const order_list = listOrder.length == 0 ? [] : listOrder.order_list
-    //const [lstOrders, setOrders] = useState(order_list)
-    const [isVisibleDialogConfirm, setVisibleDialogConfirm] = useState(false)
-    const [isVisibleDialogDelete, setVisibleDialogDelete] = useState(false)
-
-
-
-
-
-
-   
 
     // useFocusEffect get called each time when screen comes in focus
     useFocusEffect(
@@ -283,7 +324,12 @@ const TableOrderScreen = (props) => {
             }}>
                 <TouchableOpacity
                     onPress={() => {
-                        callPostInsertOrders()
+                        if (listOrderTmp.length == 0) {
+                            setNotiOrder(true)
+                        }
+                        else {
+                            setShowOrderConfirm(true)
+                        }
                     }}
                     style={{
                         flex: 1,
@@ -303,7 +349,7 @@ const TableOrderScreen = (props) => {
 
                 <TouchableOpacity
                     onPress={() => {
-                        callPostInsertTableInfo()
+                        setShowCreateTable(true)
                     }}
                     style={{
                         flex: 1,
@@ -357,11 +403,12 @@ const TableOrderScreen = (props) => {
                                 key={index}
                                 index={index}
                                 onDelete={() => {
-                                    //setVisibleDialogDelete(true)
+                                    setSelectedOrderIndex(index)
+                                    setShowRemoveProduct(true)
                                 }}
                                 onConfirm={() => {
                                     setSelectOrderId(item.table_order_id)
-                                    //setVisibleDialogConfirm(true)
+                                    setShowDoneOrder(true)
                                 }}
                             />}
                         //keyExtractor={item => item.table_id}
@@ -369,42 +416,128 @@ const TableOrderScreen = (props) => {
                         refreshing={isFetchingOrderLstTmp}
                         progressViewOffset={100}
                     />
-                    {/* Dialog confirm */}
+                    {/* Dialog confirm create table ok */}
                     <ModalDialog
-                        visible={isVisibleDialogConfirm}
+                        visible={isShowCreateTable}
                         children={{
-                            title: 'Xác nhận!',
-                            message: 'Đã chuẩn bị món xong?',
+                            title: contents.title_confirm,
+                            message: contents.cont_create_table,
+                            type: contents.type_yesno
+                        }}
+                        onYes={() => {
+                            setShowCreateTable(false)
+                            callPostInsertTableInfo()
+                        }}
+                        onNo={() => {
+                            setShowCreateTable(false)
+                        }}>
+                    </ModalDialog>
+                    {/* Dialog show remove product ok*/}
+                    <ModalDialog
+                        visible={isShowRemoveProduct}
+                        children={{
+                            title: contents.title_confirm,
+                            message: contents.msg_ask_del_product,
+                            type: contents.type_yesno
+                        }}
+                        onYes={() => {
+                            setShowRemoveProduct(false)
+                            delOrderTmpByAmount()
+                        }}
+                        onNo={() => {
+                            setShowRemoveProduct(false)
+                        }}>
+                    </ModalDialog>
+                    {/* Dialog confirm order product ok*/}
+                    <ModalDialog
+                        visible={isShowOrderConfirm}
+                        children={{
+                            title: contents.title_confirm,
+                            message: contents.msg_ask_confirm_order,
+                            type: contents.type_yesno
+                        }}
+                        onYes={() => {
+                            setShowOrderConfirm(false)
+                            callPostInsertOrders()
+                            //call api order
+                        }}
+                        onNo={() => {
+                            setShowOrderConfirm(false)
+                        }}>
+                    </ModalDialog>
+                    {/* Dialog confirm done order product */}
+                    <ModalDialog
+                        visible={isShowDoneOrder}
+                        children={{
+                            title: contents.title_confirm,
+                            message: contents.msg_ask_confirm_done,
+                            type: contents.type_yesno
+                        }}
+                        onYes={() => {
+                            setShowDoneOrder(false)
+                            if (selectOrderId != '') {
+                                callPutUpdateDoneOrder()
+                            }
+                        }}
+                        onNo={() => {
+                            setShowDoneOrder(false)
+                        }}>
+                    </ModalDialog>
+                    {/* Dialog notice no more order */}
+                    <ModalDialog
+                        visible={isNotiNotExistsOrder}
+                        children={{
+                            title: contents.title_notice,
+                            message: contents.msg_warn_no_more_order,
                             type: 'yes/no'
                         }}
                         onYes={() => {
-                            setVisibleDialogConfirm(false)
+                            setNotiNotExistsOrder(false)
+                            //call api done order
                         }}
                         onNo={() => {
-                            setVisibleDialogConfirm(false)
+                            setNotiNotExistsOrder(false)
+                        }}>
+                    </ModalDialog>
+                    {/* Dialog notice go back when ordering */}
+                    <ModalDialog
+                        visible={isNotiGoBack}
+                        children={{
+                            title: contents.title_notice,
+                            message: contents.msg_warn_goback,
+                            type: 'yes/no'
+                        }}
+                        onYes={() => {
+                            setNotiGoBack(false)
+                            //call api done order
+                        }}
+                        onNo={() => {
+                            setNotiGoBack(false)
+                        }}>
+                    </ModalDialog>
+                    {/* Dialog notice order click without order */}
+                    <ModalDialog
+                        visible={isNotiOrder}
+                        children={{
+                            title: contents.title_notice,
+                            message: contents.msg_warn_empty_order,
+                            type: contents.type_ok
+                        }}
+                        onYes={() => {
+                            setNotiOrder(false)
+                            //call api done order
                         }}>
                     </ModalDialog>
 
-                    <ModalDialog
-                        visible={isVisibleDialogDelete}
-                        children={{
-                            title: 'Xóa bỏ!',
-                            message: 'Xóa chọn món?',
-                            type: 'yes/no'
-                        }}
-                        onYes={() => {
-                            setVisibleDialogDelete(false)
-                        }}
-                        onNo={() => {
-                            setVisibleDialogDelete(false)
-                        }}>
-                    </ModalDialog>
+
+
+
 
                     {/* Note */}
                     <View style={{ height: 80 }}>
                         <View style={styles.note_bg}>
                             <TextInput
-                                placeholder='Please type notes here...'
+                                placeholder={contents.cont_plh_note}
                                 multiline={true}
                             >
                             </TextInput>
@@ -434,7 +567,6 @@ const TableOrderScreen = (props) => {
                     />
                 </View>
 
-
                 <View style={{ flex: 85 }}>
                     <View style={{ flex: 100, padding: 10 }}>
                         {/* Header Table */}
@@ -460,8 +592,8 @@ const TableOrderScreen = (props) => {
                             justifyContent: 'center',
                             alignItems: 'center'
                         }}>
-                            <Text>{tableInfoId ? 'Menu Not Found!' :
-                                'Please click [Create] button to start order.'}</Text>
+                            <Text>{tableInfoId ? contents.msg_err_menu_not_found :
+                                contents.msg_ask_create_table}</Text>
                         </View>
 
                         {/* Content Table */}

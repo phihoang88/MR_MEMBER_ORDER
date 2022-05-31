@@ -21,9 +21,6 @@ const ReceiptScreen = (props) => {
         <ImageBackground
             style={styles.img_background}
             source={images.backgroundApp}>
-            {/* <ScrollView>
-                {orders.map(or => <OrderItem order={or} key={or.order_id}/>)}
-            </ScrollView> */}
             <FlatList
                 data={orders}
                 renderItem={({ item }) =>

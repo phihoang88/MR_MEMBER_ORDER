@@ -23,24 +23,9 @@ const LoginScreen = (props) => {
     const GET_URL = apis.BASE_URL + '/listUser'
     const POST_URL = apis.BASE_URL + '/login'
 
-    const callGet = async () => {
-        try {
-            const res = await axios.get(GET_URL)
-        } catch (error) {
-            console.log(error.message)
-        }
-    }
-
-    const callGetById = async (id) => {
-        try {
-        } catch (error) {
-            console.log(error.message)
-        }
-    }
-
     const callPost = async () => {
         try {
-            const res = await axios.post(`${POST_URL}`, {
+            const res = await axios.post(`${apis.USER_PATH}/login`, {
                 usernameOrEmail: userId,
                 password: password
             })
@@ -84,10 +69,10 @@ const LoginScreen = (props) => {
                     </View>
                     <TouchableOpacity style={styles.button}
                         onPress={() => {
-                            // userId == '' || password == '' ? 
-                            // showToast("Vui lòng nhập username, password!") :
-                            // callPost() 
-                            navigate('Tabbar')
+                            userId == '' || password == '' ? 
+                            showToast("Vui lòng nhập username, password!") :
+                            callPost() 
+                            //navigate('Tabbar')
                         }}>
                         <Text style={styles.button_txt}>LOGIN</Text>
                     </TouchableOpacity>

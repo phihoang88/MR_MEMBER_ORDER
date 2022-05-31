@@ -46,8 +46,7 @@ const ModalDialog = ({ visible, children, onYes, onNo }) => {
                                 <Text style={styles.text}>OK</Text>
                             </TouchableOpacity>
                         </View>
-
-                        <View style={{ flex: 50, borderTopWidth: 1 }}>
+                        {type == 'yes/no' && <View style={{ flex: 50, borderTopWidth: 1 }}>
                             <TouchableOpacity
                                 style={{
                                     flex: 1,
@@ -59,7 +58,8 @@ const ModalDialog = ({ visible, children, onYes, onNo }) => {
                                 }}>
                                 <Text style={styles.text}>Cancel</Text>
                             </TouchableOpacity>
-                        </View>
+                        </View>}
+
                     </View>
                 </View>
             </View>

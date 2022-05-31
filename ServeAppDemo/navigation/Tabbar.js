@@ -7,7 +7,8 @@ import {
     TableScreen,
     OrderScreen,
     ReceiptScreen,
-    PersonalScreen
+    PersonalScreen,
+    BookScreen
 } from '../screens'
 const Tab = createBottomTabNavigator()
 const screenOptions = ({ route }) => ({
@@ -28,7 +29,7 @@ const Tabbar = (props) => {
                 tabBarIcon: ({ color, size }) => (
                     <Icon name="table" color={color} size={20} />
                 ),
-                tabBarBadge: 3,
+                //tabBarBadge: 3,
             }}
         />
         <Tab.Screen 
@@ -39,7 +40,16 @@ const Tabbar = (props) => {
             tabBarIcon: ({ color, size }) => (
                 <Icon name="list" color={color} size={20} />
             ),
-            tabBarBadge: 3,
+            //tabBarBadge: 3,
+        }}/>
+        <Tab.Screen 
+        name={"BookScreen"} 
+        component={BookScreen} 
+        options={{
+            tabBarLabel: 'Book',
+            tabBarIcon: ({ color, size }) => (
+                <Icon name="user" color={color} size={20} />
+            ),
         }}/>
         <Tab.Screen 
         name={"ReceiptScreen"} 

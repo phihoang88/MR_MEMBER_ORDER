@@ -33,6 +33,8 @@ const TableItem = (props) => {
                 return 'blue'
             case 'Serving':
                 return 'green'
+            default:
+                return '#edeec6'
         }
     }
     return <TouchableOpacity
@@ -122,9 +124,9 @@ const styles = StyleSheet.create({
     bgNote: {
         flex: 40,
         backgroundColor: 'white',
+        marginRight: 1,
         borderBottomLeftRadius: 20,
         borderBottomRightRadius: 20,
-        marginRight: 1
     },
     noteTx: {
         fontSize: 12,

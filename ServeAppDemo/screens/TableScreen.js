@@ -85,7 +85,7 @@ const TableScreen = (props) => {
 
 const styles = (color) => StyleSheet.create({
     container: {
-        flew: 1
+        flex: 1
     },
     stt_bg: {
         backgroundColor: color,
