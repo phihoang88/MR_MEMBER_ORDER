@@ -6,23 +6,38 @@ import {
     ImageBackground,
     StyleSheet
 } from 'react-native'
-import { images,apis } from '../config'
+import { images, apis, colors, contents } from '../config'
+import { ModalDialog,Toast } from '../components'
 import TableItem from './subScreens/TableItem'
 import Icon from 'react-native-vector-icons/FontAwesome5'
 import axios from 'axios'
 
 const TableScreen = (props) => {
 
+    //<------------------------initload-----------------------------START>
+    //set navigation screens
     const { navigation, route } = props
     const { navigate, goBack } = navigation
 
+    //set refresh status
+    const [isRefreshing, setRefreshing] = useState(false)
+
+    //set init load list data 
     const [tables, setTables] = useState([])
 
-    const GET_URL = apis.BASE_URL + '/Table/getList'
+    //set  init selected table 
+    const [selectedTableInfoId, setSelectedTableInfoId] = useState(null)
+    const [selectedTableNm, setSelectedTableNm] = useState('')
 
+    //set init dialog receive call
+    const [isShowReceive, setShowReceive] = useState(false)
+
+    //init load function
     useEffect(() => {
         const unsubscribe = navigation.addListener('focus', () => {
             //after goback
+            setRefreshing(false)
+
             callGet()
         });
         //initload
@@ -30,37 +45,67 @@ const TableScreen = (props) => {
         return unsubscribe;
     }, [navigation])
 
+    //when refresh list 
+    useEffect(() => {
+        setRefreshing(false)
+    }, [isRefreshing])
 
+    //call api get list table
     const callGet = async () => {
         try {
-            const res = await axios.get(GET_URL)
-            setTables(res.data.data)
+            setRefreshing(true)
+            const res = await axios.get(`${apis.TABLE_INFO_PATH}/getList`)
+            if (res.data.status == contents.status_ok) {
+                setTables(res.data.data)
+            }
+            else {
+                setTables([])
+            }
         } catch (error) {
-            console.log(`huy ${error.message}`)
+            console.log(`${error.message}`)
         }
     }
 
-    return <View style={styles('').container}>
+    //call Put update calling status
+    const callPutReceiveCalling = async () => {
+        try {
+            const res = await axios.put(`${apis.TABLE_INFO_PATH}/receiveCalling/${selectedTableInfoId}`)
+            if (res.data.status == contents.status_ok) {
+                Toast(contents.msg_success_receive)
+                callGet()
+            }
+            else {
+                Toast(contents.msg_err_receive)
+            }
+        } catch (error) {
+            console.log(`callPutReceiveCalling ${error}`)
+        }
+    }
+    //<------------------------initload-----------------------------END>
+
+    return <View style={styles.container}>
         <ImageBackground
-            source={images.backgroundApp}
-            style={styles('').container}>
-            <View style={styles('').note_bg}>
+            source={{
+                uri:images.backgroundApp
+            }}
+            style={styles.container}>
+            <View style={styles.note_bg}>
                 <View>
-                    <Icon name='phone-alt' size={16} color={'red'}/>
+                    <Icon name='phone-alt' size={16} color={'red'} />
                 </View>
-                <Text style={styles('').stt_tx}>Calling</Text>
+                <Text style={styles.stt_tx}>Calling</Text>
 
-                <View style={styles('red').stt_bg}></View>
-                <Text style={styles('').stt_tx}>Ordering</Text>
+                <View style={[styles.stt_bg, { backgroundColor: 'red' }]}></View>
+                <Text style={styles.stt_tx}>Ordering</Text>
 
-                <View style={styles('green').stt_bg}></View>
-                <Text style={styles('').stt_tx}>Serving</Text>
+                <View style={[styles.stt_bg, { backgroundColor: 'green' }]}></View>
+                <Text style={styles.stt_tx}>Serving</Text>
 
-                <View style={styles('blue').stt_bg}></View>
-                <Text style={styles('').stt_tx}>Booking</Text>
+                <View style={[styles.stt_bg, { backgroundColor: 'blue' }]}></View>
+                <Text style={styles.stt_tx}>Booking</Text>
 
-                <View style={styles('#edeec6').stt_bg}></View>
-                <Text style={styles('').stt_tx}>Empty</Text>
+                <View style={[styles.stt_bg, { backgroundColor: colors.color_app }]}></View>
+                <Text style={styles.stt_tx}>Emptying</Text>
             </View>
             <FlatList
                 data={tables}
@@ -69,26 +114,51 @@ const TableScreen = (props) => {
                     <TableItem table={item}
                         key={item.table_info_id}
                         onPress={() => {
-                            navigate('TableOrderScreen', {
-                                'table_id': item.table_id,
-                                'table_info_id': item.table_info_id,
-                                'table_nm': item.table_nm_vn,
-                                'table_stt': item.table_stt_nm,
-                            })
+                            setSelectedTableInfoId(item.table_info_id)
+                            setSelectedTableNm(item.table_nm_vn)
+                            if (item.is_calling == 1) {
+                                //calling
+                                setShowReceive(true)
+                            }
+                            else {
+                                navigate('TableOrderScreen', {
+                                    'table_id': item.table_id,
+                                    'table_info_id': item.table_info_id,
+                                    'table_nm': item.table_nm_vn,
+                                    'table_stt': item.table_stt_nm,
+                                })
+                            }
                         }}
                     />}
                 keyExtractor={item => item.table_id}
+                onRefresh={callGet}
+                refreshing={isRefreshing}
+                progressViewOffset={100}
             />
         </ImageBackground>
+        <ModalDialog 
+            visible={isShowReceive}
+            children={{
+                title : 'Receive this call?',
+                message : `Table ${selectedTableNm} is calling...`,
+                type : 'yes/no'
+            }}
+            onYes={() => {
+                setShowReceive(false)
+                callPutReceiveCalling()
+            }}
+            onNo={() => {
+                setShowReceive(false)
+            }}
+        />
     </View>
 }
 
-const styles = (color) => StyleSheet.create({
+const styles = StyleSheet.create({
     container: {
         flex: 1
     },
     stt_bg: {
-        backgroundColor: color,
         width: 20,
         height: 20,
         borderRadius: 5,
@@ -103,13 +173,10 @@ const styles = (color) => StyleSheet.create({
     note_bg: {
         alignSelf: 'flex-end',
         flexDirection: 'row',
-        backgroundColor: '#edeec6',
+        backgroundColor: colors.color_app,
         borderRadius: 5,
         padding: 1
     }
-
-
 })
-
 
 export default TableScreen  

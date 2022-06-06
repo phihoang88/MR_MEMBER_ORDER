@@ -2,133 +2,166 @@ import React from 'react'
 import {
     View,
     Text,
-    StyleSheet,
-    Image,
     TouchableOpacity
 } from 'react-native'
+import { colors } from '../../config'
 
 const ReceiptItem = (props) => {
-    function _getStatus(stt) {
-        if (stt == false) {
-            return <View style={styles.bgStatus_new}>
-                <Text style={styles.status_new}>New</Text>
+    let {
+        table_info_id,
+        product_order_stt_id,
+        table_nm_vn,
+        table_nm_en,
+        table_nm_jp,
+        listProducts
+    } = props.receipt
+    let onPress = props.onPress
+
+    function ListProductOrder() {
+        if (listProducts.length == 1) {
+            return <View style={{
+                flexDirection: 'row',
+                height: '50%',
+                borderBottomWidth: 1,
+                marginRight: 10
+            }}>
+                <View style={{ flex: 60, justifyContent: 'center', alignItems: 'flex-start' }}>
+                    <Text style={{
+                        color:'black',
+                        fontSize:15
+                    }}>{listProducts[0].product_nm_vn || listProducts[0].product_nm_en || listProducts[0].product_nm_jp}</Text>
+                </View>
+                <View style={{ flex: 20, justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{
+                        color:'black',
+                        fontSize:15
+                    }}>x {listProducts[0].count}</Text>
+                </View>
+                <View style={{ flex: 20, justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{
+                        color:'red',
+                        fontSize:15
+                    }}>${listProducts[0].price || listProducts[0].price_show}</Text>
+                </View>
             </View>
         }
         else {
-            return <View style={styles.bgStatus_done}>
-                <Text style={styles.status_done}>Done</Text>
+            return <View style={{ flex: 1 }}>
+                <View style={{
+                    flexDirection: 'row',
+                    height: '50%',
+                    borderBottomWidth: 1,
+                    marginRight: 10
+                }}>
+                    <View style={{ flex: 60, justifyContent: 'center', alignItems: 'flex-start' }}>
+                    <Text style={{
+                        color:'black',
+                        fontSize:15
+                    }}>{listProducts[0].product_nm_vn || listProducts[0].product_nm_en || listProducts[0].product_nm_jp}</Text>
+                </View>
+                <View style={{ flex: 20, justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{
+                        color:'black',
+                        fontSize:15
+                    }}>x {listProducts[0].count}</Text>
+                </View>
+                <View style={{ flex: 20, justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{
+                        color:'red',
+                        fontSize:15
+                    }}>${listProducts[0].price || listProducts[0].price_show}</Text>
+                </View>
+                </View>
+                <View style={{
+                    flexDirection: 'row',
+                    height: '50%',
+                    marginRight: 10
+                }}>
+                    <View style={{ flex: 60, justifyContent: 'center', alignItems: 'flex-start' }}>
+                    <Text style={{
+                        color:'black',
+                        fontSize:15
+                    }}>{listProducts[1].product_nm_vn || listProducts[1].product_nm_en || listProducts[1].product_nm_jp}</Text>
+                </View>
+                <View style={{ flex: 20, justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{
+                        color:'black',
+                        fontSize:15
+                    }}>x {listProducts[1].count}</Text>
+                </View>
+                <View style={{ flex: 20, justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{
+                        color:'red',
+                        fontSize:15
+                    }}>${listProducts[1].price || listProducts[1].price_show}</Text>
+                </View>
+                </View>
             </View>
         }
     }
-    let { order_id,
-        name,
-        price,
-        image,
-        note,
-        ordertime,
-        table_id,
-        table_nm,
-        is_done,
-    } = props.order
-
-    const { onPress } = props
     return <TouchableOpacity
-        style={styles.bgItem}
-        onPress={onPress}>
-        {/* image meal */}
-        <View style={{
-            flex: 20,
-            marginEnd: 15,
-        }}>
-            <Image
-                source={image}
-                style={styles.img_order}>
-            </Image>
+        style={{
+            flex: 1,
+            height: 100,
+            width: '100%',
+            marginBottom: 5,
+            borderWidth: 1,
+            borderRadius: 15,
+            backgroundColor: colors.color_app
+        }}
+        onPress={onPress}
+    >
+        <View style={{ flex: 30, flexDirection: 'row' }}>
+            <View style={{ flex: 50, flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center', marginLeft: 10 }}>
+                <Text style={{
+                    color: 'black'}}>Table  </Text>
+                <Text style={{
+                    color: 'black',
+                    fontSize: 18,
+                    fontWeight: 'bold'
+                }}>{table_nm_vn || table_nm_en || table_nm_jp}</Text>
+            </View>
+            {product_order_stt_id == 0 && <View style={{
+                borderRadius: 7,
+                justifyContent: 'center',
+                alignItems: 'flex-end',
+                marginRight: 5,
+                marginTop: 5,
+                paddingLeft: 10,
+                paddingRight: 10,
+                backgroundColor: 'red'
+            }}>
+                <Text style={{
+                    color: 'yellow',
+                    fontSize: 15,
+                    fontWeight: 'bold'
+                }}>Serving</Text>
+            </View>
+            }
+            {product_order_stt_id == 1 && <View style={{
+                borderRadius: 7,
+                justifyContent: 'center',
+                alignItems: 'flex-end',
+                marginRight: 5,
+                marginTop: 5,
+                paddingLeft: 10,
+                paddingRight: 10,
+                backgroundColor: 'green'
+            }}>
+                <Text style={{
+                    color: 'yellow',
+                    fontSize: 15,
+                    fontWeight: 'bold'
+                }}>Done</Text>
+            </View>
+            }
         </View>
-        {/* info meal */}
-        <View style={{
-            flex: 45,
-        }}>
-            <Text style={styles.title}>{name}</Text>
-            <View style={{ height: 1, backgroundColor: 'black' }} />
-            <Text style={styles.number}>¥{price}</Text>
-            <Text style={styles.text}>Note: {note}</Text>
-            <Text style={styles.time}>Order time: {ordertime}</Text>
-        </View>
-        {/* status meal */}
-        <View style={{
-            flex: 15,
-        }}>
-            <Text style={styles.table_nm}>Table {table_nm}</Text>
-            {_getStatus(is_done)}
+
+        <View style={{ flex: 70, marginLeft: 10 }}>
+            {ListProductOrder()}
         </View>
     </TouchableOpacity>
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    img_background: {
-        flex: 1,
-        padding: 5
-    },
-    bgItem: {
-        height: 120,
-        backgroundColor: '#edeec6',
-        borderRadius: 20,
-        padding: 10,
-        flexDirection: 'row',
-        marginBottom: 5
-    },
-    img_order: {
-        height: '100%',
-        width: 100,
-        borderRadius: 20,
-        marginRight: 10
-    },
-    title: {
-        fontWeight: 'bold',
-        fontSize: 15,
-        color: 'black'
-    },
-    number: {
-        color: 'red'
-    },
-    text: {
-        color: 'black'
-    },
-    time: {
-        color: 'blue',
-        fontStyle: 'italic',
-        fontSize: 12
-    },
-    table_nm: {
-        marginBottom: 10,
-        fontWeight: 'bold',
-        color: 'red',
-        fontSize: 13
-    },
-    bgStatus_new: {
-        backgroundColor: 'red',
-        width: 40,
-        alignSelf: 'center',
-        borderRadius: 8,
-    },
-    bgStatus_done: {
-        backgroundColor: 'grey',
-        width: 40,
-        alignSelf: 'center',
-        borderRadius: 8,
-    },
-    status_new: {
-        textAlign: 'center',
-        color: 'yellow'
-    },
-    status_done: {
-        textAlign: 'center',
-        color: 'white'
-    }
-})
 export default ReceiptItem
 

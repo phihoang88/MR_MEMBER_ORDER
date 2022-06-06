@@ -8,6 +8,7 @@ import {
     TextInput,
     FlatList,
     StyleSheet,
+    Keyboard
 } from 'react-native'
 import { apis, colors, system, contents } from '../config'
 import {
@@ -50,9 +51,14 @@ const TableOrderScreen = (props) => {
     //set init select item order
     const [selectOrderId, setSelectOrderId] = useState('')
     const [selectedOrderIndex, setSelectedOrderIndex] = useState('')
+    // set init note
+    const [txtNote, setNote] = useState('')
 
     //set init progress update table
     const [isDoneUpdateOrder, setDoneUpdateOrder] = useState(false)
+
+    //set show key board
+    const [isShowKeyBoard, SetShowKeyBoard] = useState(false)
 
     //set init show Dialog
     const [isShowCreateTable, setShowCreateTable] = useState(false)
@@ -70,7 +76,7 @@ const TableOrderScreen = (props) => {
             //load list menu
             callGetListMenu()
             callGetAllMealList()
-            if (table_stt == 'Serving' || table_stt == 'Ordering') {
+            if (table_stt == contents.table_serving || table_stt == contents.table_ordering) {
                 callGetAllMealOrderList(tableInfoId)
             }
             else {
@@ -105,11 +111,20 @@ const TableOrderScreen = (props) => {
 
 
     //<-----------------------Function---------------------------->
+    //when key board show
+    useEffect(() => {
+        Keyboard.addListener('keyboardDidShow', () => {
+            SetShowKeyBoard(true)
+        })
+        Keyboard.addListener('keyboardDidHide', () => {
+            SetShowKeyBoard(false)
+        })
+    })
     //get List Menu
     const callGetListMenu = async () => {
         try {
             const res = await axios.get(`${apis.MENU_PATH}/getList`)
-            if (res.data.status == 'success') {
+            if (res.data.status == contents.status_ok) {
                 setListMenu(res.data.data)
                 setSelectedIndexMenu(0)
                 setSelectedMenuId(res.data.data[0].menu_id)
@@ -128,7 +143,7 @@ const TableOrderScreen = (props) => {
     const callGetAllMealList = async () => {
         try {
             const res = await axios.get(`${apis.PRODUCT_PATH}/getList`)
-            if (res.data.status == 'success') {
+            if (res.data.status == contents.status_ok) {
                 setListAllProduct(res.data.data)
             }
             else {
@@ -143,7 +158,7 @@ const TableOrderScreen = (props) => {
     const callGetAllMealOrderList = async (tableInfoId) => {
         try {
             const res = await axios.get(`${apis.TABLE_PATH}/getOrderingList/${tableInfoId}`)
-            if (res.data.status == 'success') {
+            if (res.data.status == contents.status_ok) {
                 setListOrderTmp(res.data.data)
                 let foundOrderNotDone = res.data.data.some(element => element.product_order_stt_id != "1")
                 if (!foundOrderNotDone) {
@@ -154,7 +169,8 @@ const TableOrderScreen = (props) => {
                 }
             }
             else {
-                goBack()
+                //goBack()
+                Toast(contents.msg_info_order_list_empty)
             }
         } catch (error) {
             console.log(`callGetAllMealOrderList ${error.message}`)
@@ -170,7 +186,8 @@ const TableOrderScreen = (props) => {
                     "productId": item.product_id,
                     "count": item.product_count,
                     "productOrderSttId": "0",
-                    "orderDt": system.systemDateTimeString(),
+                    "orderDt": system.systemDateString(),
+                    "orderTm": system.systemTimeString(),
                     "crtDt": system.systemDateTimeString(),
                     "crtUserId": "huy",
                     "crtPgmId": "table order",
@@ -203,6 +220,7 @@ const TableOrderScreen = (props) => {
                 "serveDate": system.systemDateString(),
                 "serveTime": system.systemTimeString(),
                 "isEnd": "0",
+                "noteTx": txtNote,
                 "crtDt": system.systemDateTimeString(),
                 "crtUserId": "huy",
                 "crtPgmId": "order",
@@ -402,6 +420,9 @@ const TableOrderScreen = (props) => {
                                 order={item}
                                 key={index}
                                 index={index}
+                                onSelected={() => {
+                                    setNote(txtNote + ' ' + item.product_nm_vn + ' :')
+                                }}
                                 onDelete={() => {
                                     setSelectedOrderIndex(index)
                                     setShowRemoveProduct(true)
@@ -528,26 +549,38 @@ const TableOrderScreen = (props) => {
                             //call api done order
                         }}>
                     </ModalDialog>
-
-
-
-
-
                     {/* Note */}
-                    <View style={{ height: 80 }}>
+                    <View style={{ height: 60, 
+                        flexDirection: 'row',
+                        borderWidth:1,
+                        borderRadius:15, }}>
                         <View style={styles.note_bg}>
                             <TextInput
                                 placeholder={contents.cont_plh_note}
                                 multiline={true}
+                                onChangeText={text => setNote(text)}
+                                value={txtNote}
                             >
                             </TextInput>
+                        </View>
+                        <View style={{
+                            flex: 20,
+                            marginRight:-15
+                        }}>
+                            <TouchableOpacity style={{
+                                flex: 1,
+                                justifyContent:'center',
+                                alignItems:'center',
+                            }}>
+                                <Icon name='save' size={30} color={'black'}/>
+                            </TouchableOpacity>
                         </View>
                     </View>
                 </View>
             </View>
 
             {/* Menu */}
-            <View style={{ flex: 50 }}>
+            <View style={{ flex: 50, display: isShowKeyBoard == true ? 'none' : 'flex', }}>
                 <View style={{ flex: 15 }}>
                     <FlatList
                         horizontal={true}
@@ -664,10 +697,8 @@ const styles = StyleSheet.create({
         fontWeight: 'bold'
     },
     note_bg: {
-        flex: 1,
+        flex: 80,
         width: '100%',
-        borderRadius: 10,
-        borderWidth: 1,
         justifyContent: 'flex-start',
         alignSelf: 'flex-start'
     },

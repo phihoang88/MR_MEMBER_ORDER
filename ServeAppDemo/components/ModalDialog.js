@@ -32,6 +32,7 @@ const ModalDialog = ({ visible, children, onYes, onNo }) => {
                         justifyContent: 'space-evenly',
                         alignItems: 'flex-end',
                         flexDirection: 'row',
+                        marginTop:10
                     }}>
                         <View style={{ flex: 50, borderTopWidth: 1, marginRight: 2 }}>
                             <TouchableOpacity

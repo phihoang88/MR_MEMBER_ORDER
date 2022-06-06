@@ -4,34 +4,70 @@ import {
     Text,
     StyleSheet,
     ImageBackground,
-    Image,
-    ScrollView,
     FlatList
 } from 'react-native'
 
-import { images } from '../config'
-import { listMenu } from '../contents'
-import ReceiptItem from './subScreens/ReceiptItem'
+import { apis, images } from '../config'
+import { ReceiptItem } from '../screens'
+import axios from 'axios'
 
 
 const ReceiptScreen = (props) => {
-    const [orders, setOrders] = useState(listMenu)
+
+    const { navigation, route } = props
+    const { navigate, gpBack } = navigation
+
+    // <-------------------------------initload---------------------------------START>
+    const [listReceipt, setListReceipt] = useState([])
+
+    //initload
+    useEffect(() => {
+        const unsub = navigation.addListener('focus', () => {
+            //goback
+            callGetTableOrderingList()
+        })
+        //initload
+        callGetTableOrderingList()
+        return unsub
+    }, [navigation])
+
+    // <-------------------------------initload---------------------------------END>
+
+
+    // <-------------------------------function---------------------------------START>
+    const callGetTableOrderingList = async () => {
+        try {
+            const res = await axios.get(`${apis.RECEIPT_PATH}/getListOrderForReceipt`)
+            setListReceipt(res.data.data)
+        }
+        catch(error){
+            console.log(`callGetTableOrderingList ${error}`)
+        }
+        
+    }
+    // <-------------------------------function---------------------------------END>
+
+
 
     return <View style={styles.container}>
         <ImageBackground
             style={styles.img_background}
             source={images.backgroundApp}>
             <FlatList
-                data={orders}
-                renderItem={({ item }) =>
-                    <ReceiptItem order={item}
-                               key={item.order_id}
-                               onPress={() => {
-                                    //alert(item.order_id)
-                               }} />}
-                keyExtractor={item => item.order_id}
+                data={listReceipt}
+                renderItem={({ item, index }) =>
+                    <ReceiptItem
+                        receipt={item}
+                        key={item.table_info_id}
+                        index={index}
+                        onPress={()=>{
+                            navigate('ReceiptDetailScreen',{
+                                'receiptDetail' : item
+                            })
+                        }}
+                    />}
+                keyExtractor={item => item.table_info_id}
             />
-
         </ImageBackground>
     </View>
 }
@@ -44,11 +80,7 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 5
     }
-
-
 })
-
-
 
 export default ReceiptScreen
 

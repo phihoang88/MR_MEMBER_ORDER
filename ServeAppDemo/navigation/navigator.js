@@ -15,8 +15,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { StackRouter } from 'react-navigation'
 import {
     LoginScreen,
-    HomeScreen,
     TableOrderScreen,
+    ReceiptDetailScreen,
+    HomeScreen
 } from '../screens'
 import Tabbar from './Tabbar';
 
@@ -24,10 +25,12 @@ const Stack = createNativeStackNavigator();
 
 const navigator = (props) => {
     return <NavigationContainer>
-        <Stack.Navigator initialRouteName='LoginScreen' screenOptions={{headerShown:false}}>
+        <Stack.Navigator initialRouteName='HomeScreen' screenOptions={{ headerShown: false }}>
+            <Stack.Screen name={"HomeScreen"} component={HomeScreen} />
             <Stack.Screen name={"LoginScreen"} component={LoginScreen} />
-            <Stack.Screen name={"Tabbar"} component={Tabbar}/>
-            <Stack.Screen name={"TableOrderScreen"} component={TableOrderScreen}/>
+            <Stack.Screen name={"Tabbar"} component={Tabbar} />
+            <Stack.Screen name={"TableOrderScreen"} component={TableOrderScreen} />
+            <Stack.Screen name={"ReceiptDetailScreen"} component={ReceiptDetailScreen} />
         </Stack.Navigator>
     </NavigationContainer>
 }

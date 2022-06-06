@@ -1,13 +1,33 @@
+//system api
 const status_ok = 'success'
 const status_ng = 'failed'
 
+//table status
+const table_serving = 'Serving'
+const table_ordering = 'Ordering'
+const table_emptying = 'Emptying'
+const table_booking = 'Booking'
+
+//dialog
 const title_confirm = 'Confirm'
 const title_notice = 'Notice'
 const title_warning = 'Warning'
 const title_error = 'Error'
 
-const cont_create_table = 'Create new table?'
+// LOGIN SCREEN
+const msg_err_input_empty = 'Vui lòng nhập username, password!'
+const msg_login_ok = 'Login success!'
+const msg_login_failed = 'Username,password not exists!'
 
+// TABLE SCREEN
+const msg_success_receive = 'Receive successfully!'
+const msg_err_receive = 'Receive error!'
+
+
+// TABLE ORDER SCREEN
+const msg_info_order_list_empty = 'Order list is emptying.'
+
+const cont_create_table = 'Create new table?'
 const cont_plh_note = 'Please type note here...'
 
 const msg_ask_create_table = 'Please click [Create] button to start order.'
@@ -50,9 +70,29 @@ export default {
     title_notice,
     title_warning,
     title_error,
+
+    //table status
+    table_serving,
+    table_ordering, 
+    table_emptying, 
+    table_booking, 
+
+    //login
+    msg_login_ok,
+    msg_login_failed,
+    msg_err_input_empty,
+
+    // login screen
+    msg_success_receive,
+    msg_err_receive,
+
+    //Table order screen
+    msg_info_order_list_empty,
+
+
     cont_create_table,
     cont_plh_note,
-    
+
     msg_ask_confirm_order,
     msg_ask_create_table,
     msg_ask_del_product,

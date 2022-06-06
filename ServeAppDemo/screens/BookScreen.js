@@ -28,10 +28,12 @@ const BookScreen = (props) => {
     const [isShowKeyBoard, SetShowKeyBoard] = useState(false)
     //set init Table list
     const [listTable, setListTable] = useState([])
-    // set init Table ,Guess name,guess phone, guess count, book date, book time
+    // set init Table ,Guess name,guess phone, guess count, note
     const [txtGuessNm, onChangeGuessNm] = useState('')
     const [txtGuessPhone, onChangeGuessPhone] = useState(null)
     const [txtGuessCount, setGuessCount] = useState(0)
+    const [txtNote, setNote] = useState('')
+
     //set selected table
     const [tableIdSelected, setTableIdSelected] = useState('')
     const [tableNmSelected, setTableNmSelected] = useState('')
@@ -43,13 +45,21 @@ const BookScreen = (props) => {
     const [isShowTimePicker, setShowTimePicker] = useState(false)
     const [timeSelect, setTimeSelect] = useState(new Date())
     //set init validate message
-    const [msgError,setMsgError] = useState('')
-    const [isShowValidMsg,setShowValidMsg] = useState(false)
-    const [isShowConfirmBook,setShowConfirmBook] = useState(false)
+    const [msgError, setMsgError] = useState('')
+    const [isShowValidMsg, setShowValidMsg] = useState(false)
+    const [isShowConfirmBook, setShowConfirmBook] = useState(false)
+
     //initload function
     useEffect(() => {
+        const unsubscribe = navigation.addListener('focus', () => {
+            //after goback
+            //call Api load Table list
+            callGetListTable()
+        });
+        //initload
         //call Api load Table list
         callGetListTable()
+        return unsubscribe;
     }, [navigation])
     // <-----------------------InitLoad------------------------END>
 
@@ -89,6 +99,7 @@ const BookScreen = (props) => {
                 "guessCount": txtGuessCount,
                 "guessPhone": txtGuessPhone,
                 "isEnd": "0",
+                "noteTx": txtNote,
                 "crtDt": system.systemDateTimeString(),
                 "crtUserId": "huy",
                 "crtPgmId": "book screen",
@@ -111,7 +122,7 @@ const BookScreen = (props) => {
     return <View style={{ flex: 100, padding: 5 }}>
         {/* info */}
         <View style={{
-            flex: 50,
+            flex: 60,
             borderWidth: 1,
             marginBottom: 5,
             borderRadius: 15,
@@ -120,11 +131,11 @@ const BookScreen = (props) => {
             paddingRight: 10,
             paddingBottom: 5,
         }}>
-            <View style={{ flex: 85, flexDirection: 'row' }}>
+            <View style={{ flex: 88, flexDirection: 'row' }}>
                 {/* LABEL */}
                 <View style={{ flex: 30 }}>
                     {/* Table NO */}
-                    <View style={[{ flex: 15 }, styles.center_start]}>
+                    <View style={[{ flex: 12 }, styles.center_start]}>
                         <Text style={styles.label_tx}>Table</Text>
                     </View>
                     {/* Guess name */}
@@ -136,22 +147,26 @@ const BookScreen = (props) => {
                         <Text style={styles.label_tx}>Guess phone</Text>
                     </View>
                     {/* Guess count */}
-                    <View style={[{ flex: 15 }, styles.center_s_mt5]}>
+                    <View style={[{ flex: 12 }, styles.center_s_mt5]}>
                         <Text style={styles.label_tx}>Guess count</Text>
                     </View>
                     {/* Date */}
-                    <View style={[{ flex: 15 }, styles.center_s_mt5]}>
+                    <View style={[{ flex: 12 }, styles.center_s_mt5]}>
                         <Text style={styles.label_tx}>Book date</Text>
                     </View>
                     {/* Time */}
-                    <View style={[{ flex: 15 }, styles.center_s_mt5]}>
+                    <View style={[{ flex: 12 }, styles.center_s_mt5]}>
                         <Text style={styles.label_tx}>Book time</Text>
+                    </View>
+                    {/* Not */}
+                    <View style={[{ flex: 25 }, styles.center_s_mt5]}>
+                        <Text style={styles.label_tx}>Note</Text>
                     </View>
                 </View>
                 {/* Contents */}
                 <View style={{ flex: 70 }}>
                     {/* Table NO */}
-                    <View style={[{ flex: 15 }, styles.center_all]}>
+                    <View style={[{ flex: 12.5 }, styles.center_all]}>
                         <Text style={styles.label_content}>{tableNmSelected}</Text>
                     </View>
                     {/* Guess name */}
@@ -174,7 +189,7 @@ const BookScreen = (props) => {
                             maxLength={20} />
                     </View>
                     {/* Guess count */}
-                    <View style={[{ flex: 15, flexDirection: 'row' }, styles.center_mt5]}>
+                    <View style={[{ flex: 12, flexDirection: 'row' }, styles.center_mt5]}>
                         <TouchableOpacity
                             onPress={() => {
                                 if (txtGuessCount > 0) {
@@ -193,8 +208,8 @@ const BookScreen = (props) => {
                             color: 'black',
                             fontWeight: 'bold',
                             fontSize: 18,
-                            marginLeft:10,
-                            marginRight:10
+                            marginLeft: 10,
+                            marginRight: 10
                         }}>{txtGuessCount}</Text>
                         <TouchableOpacity
                             onPress={() => {
@@ -205,7 +220,7 @@ const BookScreen = (props) => {
                         </TouchableOpacity>
                     </View>
                     {/* Date */}
-                    <View style={[{ flex: 15, flexDirection: 'row' }, styles.center_mt5]}>
+                    <View style={[{ flex: 12, flexDirection: 'row' }, styles.center_mt5]}>
                         <View style={[{
                             flex: 70,
                             borderWidth: 1,
@@ -230,7 +245,7 @@ const BookScreen = (props) => {
                         </View>
                     </View>
                     {/* Time */}
-                    <View style={[{ flex: 15, flexDirection: 'row' }, styles.center_mt5]}>
+                    <View style={[{ flex: 12, flexDirection: 'row' }, styles.center_mt5]}>
                         <View style={[{
                             flex: 70,
                             borderWidth: 1,
@@ -254,32 +269,48 @@ const BookScreen = (props) => {
                             </TouchableOpacity>
                         </View>
                     </View>
+                    {/* Note */}
+                    <View style={{
+                        flex: 25,
+                        borderWidth: 1,
+                        borderRadius: 15,
+                        height: '100%',
+                        marginTop: 5,
+                        justifyContent: 'flex-start',
+                        alignItems: 'flex-start'
+                    }}>
+                        <TextInput style={{ fontSize: 12 }}
+                            multiline
+                            onChangeText={text => setNote(text)}
+                            value={txtNote}
+                        />
+                    </View>
 
                 </View>
             </View>
-            <View style={{ flex: 15 }}>
+            <View style={{ flex: 12 }}>
                 {/* Book button */}
                 <View style={[{ flex: 15 }, styles.center_mt5]}>
                     <TouchableOpacity
                         onPress={() => {
                             let msgErr = ''
-                            if(tableNmSelected == ''){
+                            if (tableNmSelected == '') {
                                 msgErr = msgErr + `${contents.msg_warn_nonselect_table}\n`
                             }
-                            if(txtGuessNm == ''){
+                            if (txtGuessNm == '') {
                                 msgErr = msgErr + `${contents.msg_warn_empty_guess_nm}\n`
                             }
-                            if(txtGuessPhone == null){
+                            if (txtGuessPhone == null) {
                                 msgErr = msgErr + `${contents.msg_warn_empty_guess_phone}\n`
                             }
-                            if(txtGuessCount == 0){
+                            if (txtGuessCount == 0) {
                                 msgErr = msgErr + `${contents.msg_warn_empty_guess}\n`
                             }
-                            if(msgErr != ''){
+                            if (msgErr != '') {
                                 setMsgError(msgErr)
                                 setShowValidMsg(true)
                             }
-                            else{
+                            else {
                                 setShowConfirmBook(true)
                             }
                         }}
@@ -300,7 +331,7 @@ const BookScreen = (props) => {
 
         {/* list table */}
         <View style={{
-            flex: 50,
+            flex: 40,
             borderWidth: 1,
             borderRadius: 15,
             display: isShowKeyBoard == true ? 'none' : 'flex',
@@ -315,7 +346,6 @@ const BookScreen = (props) => {
                         key={index}
                         index={index}
                         onPress={() => {
-                            console.log(item)
                             setTableIdSelected(item.table_id)
                             setTableNmSelected(item.table_nm_vn || item.table_nm_en || item.table_nm_jp)
                         }}
@@ -326,6 +356,7 @@ const BookScreen = (props) => {
             // progressViewOffset={100}
             />
         </View>
+
         <DatePicker
             modal
             mode='date'
@@ -352,30 +383,29 @@ const BookScreen = (props) => {
                 setShowTimePicker(false)
             }}
         />
-
-        <ModalDialog 
+        <ModalDialog
             visible={isShowValidMsg}
             children={{
-                title:contents.title_warning,
-                message:msgError,
-                type:'ok'
+                title: contents.title_warning,
+                message: msgError,
+                type: 'ok'
             }}
-            onYes={()=> {
+            onYes={() => {
                 setShowValidMsg(false)
             }}
         />
-        <ModalDialog 
+        <ModalDialog
             visible={isShowConfirmBook}
             children={{
-                title:contents.title_confirm,
-                message:`${contents.msg_ask_confirm_book} ${tableNmSelected} ?`,
-                type:'yes/no'
+                title: contents.title_confirm,
+                message: `${contents.msg_ask_confirm_book} ${tableNmSelected} ?`,
+                type: 'yes/no'
             }}
-            onYes={()=> {
+            onYes={() => {
                 setShowConfirmBook(false)
                 callPostInsertTableInfo()
             }}
-            onNo={()=> {
+            onNo={() => {
                 setShowConfirmBook(false)
             }}
         />

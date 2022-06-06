@@ -1,6 +1,7 @@
 import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native'
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import { images } from '../../config';
 
 const MealItem = (props) => {
     let {
@@ -20,7 +21,9 @@ const MealItem = (props) => {
         <View style={styles.container}>
             <View style={styles.image_bg}>
                 <Image
-                    source={product_ava}
+                    source={{
+                        uri: `${images.root}/${product_ava}`
+                    }}
                     style={styles.image}
                 />
             </View>

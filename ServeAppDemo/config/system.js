@@ -34,6 +34,10 @@ const getTimeFormat = (dateSelect) => {
     let minutes = dateSelect.getMinutes() < 10 ? `0${dateSelect.getMinutes()}` : dateSelect.getMinutes()
     return `${hours}:${minutes}`
 }
+const getTimeFormatByString = (timeString) => {
+    let hours = timeString.substring(0,2) + ":" + timeString.substring(2,timeString.length)
+    return hours
+}
 
 const getDateTimeFormat = (date,time) => {
     
@@ -45,5 +49,6 @@ export default{
     systemDateString,
     systemTimeString,
     getDateFormat,
-    getTimeFormat
+    getTimeFormat,
+    getTimeFormatByString
 }
