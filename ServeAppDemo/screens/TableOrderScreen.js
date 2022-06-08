@@ -31,6 +31,7 @@ const TableOrderScreen = (props) => {
     const table_nm = route.params.table_nm
     const table_stt = route.params.table_stt
 
+
     //set empty list order
     const [listOrderTmp, setListOrderTmp] = useState([])
     //set empty list menu
@@ -73,6 +74,7 @@ const TableOrderScreen = (props) => {
     useEffect(() => {
         //initload
         if (tableInfoId != null) {
+            setNote(route.params.note_tx)
             //load list menu
             callGetListMenu()
             callGetAllMealList()
@@ -157,14 +159,17 @@ const TableOrderScreen = (props) => {
     //get List Order of Table by table_id, table_status_id, 
     const callGetAllMealOrderList = async (tableInfoId) => {
         try {
-            const res = await axios.get(`${apis.TABLE_PATH}/getOrderingList/${tableInfoId}`)
+            const res = await axios.get(`${apis.TABLE_ORDER_PATH}/getOrderingList/${tableInfoId}`)
             if (res.data.status == contents.status_ok) {
                 setListOrderTmp(res.data.data)
+                console.log(res.data.data)
                 let foundOrderNotDone = res.data.data.some(element => element.product_order_stt_id != "1")
                 if (!foundOrderNotDone) {
+                    //Done
                     callPutUpdateTableStatus(3)
                 }
                 else {
+                    // Ordering
                     callPutUpdateTableStatus(4)
                 }
             }
@@ -186,6 +191,7 @@ const TableOrderScreen = (props) => {
                     "productId": item.product_id,
                     "count": item.product_count,
                     "productOrderSttId": "0",
+                    "noteTx" : item.note_tx,
                     "orderDt": system.systemDateString(),
                     "orderTm": system.systemTimeString(),
                     "crtDt": system.systemDateTimeString(),
@@ -193,11 +199,12 @@ const TableOrderScreen = (props) => {
                     "crtPgmId": "table order",
                     "delFg": "0"
                 }))
+            console.log(orderList)
             if (orderList.length == 0) {
                 setNotiOrder(true)
             }
             else {
-                const res = await axios.post(`${apis.TABLE_PATH}/insertOrders`, orderList)
+                const res = await axios.post(`${apis.TABLE_ORDER_PATH}/insert`, orderList)
                 if (res.data.status == contents.status_ok) {
                     callGetAllMealOrderList(tableInfoId)
                     Toast(contents.msg_success_send_order)
@@ -214,7 +221,7 @@ const TableOrderScreen = (props) => {
     //callPost insert order list to DB
     const callPostInsertTableInfo = async () => {
         try {
-            const res = await axios.post(`${apis.TABLE_PATH}/insertInfos`, {
+            const res = await axios.post(`${apis.TABLE_INFO_PATH}/insertOrUpdateBook`, {
                 "tableId": table_id,
                 "tableSttId": "4",//Ordering
                 "serveDate": system.systemDateString(),
@@ -238,10 +245,25 @@ const TableOrderScreen = (props) => {
         }
     }
 
+    //callPut update note
+    const callPutUpdateNoteTableInfo = async () => {
+        try {
+            const res = await axios.put(`${apis.TABLE_INFO_PATH}/updateNote/${tableInfoId}`,{txtNote})
+            if (res.data.status == contents.status_ok) {
+                Toast(contents.msg_success_update_note)
+            }
+            else {
+                Toast(contents.msg_err_update_note)
+            }
+        } catch (error) {
+            console.log(`callPutUpdateNoteTableInfo ${error}`)
+        }
+    }
+
     //callPut update done order to DB
     const callPutUpdateDoneOrder = async () => {
         try {
-            const res = await axios.put(`${apis.TABLE_PATH}/doneOrder/${selectOrderId}`)
+            const res = await axios.put(`${apis.TABLE_ORDER_PATH}/doneOrder/${selectOrderId}`)
             if (res.data.status == contents.status_ok) {
                 callGetAllMealOrderList(tableInfoId)
                 Toast(contents.msg_success_done_order)
@@ -257,7 +279,7 @@ const TableOrderScreen = (props) => {
     //callPut update done order to DB
     const callPutUpdateTableStatus = async (tableSttId) => {
         try {
-            const res = await axios.put(`${apis.TABLE_PATH}/updateStt/${tableInfoId}`, {
+            const res = await axios.put(`${apis.TABLE_INFO_PATH}/updateStt/${tableInfoId}`, {
                 "tableStatusId": tableSttId
             })
             if (res.data.status == contents.status_ok) {
@@ -283,6 +305,10 @@ const TableOrderScreen = (props) => {
         setFetchingOrderLstTmp(true)
         listOrderTmp.splice(selectedOrderIndex, 1)
         setListOrderTmp(listOrderTmp)
+    }
+
+    function updateNote(text,index){
+        listOrderTmp[index].note_tx = text
     }
 
     //<-----------------------Function---------------------------->
@@ -420,8 +446,9 @@ const TableOrderScreen = (props) => {
                                 order={item}
                                 key={index}
                                 index={index}
+                                updateNote = {updateNote}
                                 onSelected={() => {
-                                    setNote(txtNote + ' ' + item.product_nm_vn + ' :')
+                                    // setNote(txtNote + ' ' + item.product_nm_vn + ' :')
                                 }}
                                 onDelete={() => {
                                     setSelectedOrderIndex(index)
@@ -550,10 +577,13 @@ const TableOrderScreen = (props) => {
                         }}>
                     </ModalDialog>
                     {/* Note */}
-                    <View style={{ height: 60, 
+                    <View style={{
+                        height: 60,
                         flexDirection: 'row',
-                        borderWidth:1,
-                        borderRadius:15, }}>
+                        borderWidth: 1,
+                        borderRadius: 15,
+                        display: tableInfoId ? 'flex' : 'none'
+                    }}>
                         <View style={styles.note_bg}>
                             <TextInput
                                 placeholder={contents.cont_plh_note}
@@ -565,14 +595,18 @@ const TableOrderScreen = (props) => {
                         </View>
                         <View style={{
                             flex: 20,
-                            marginRight:-15
+                            marginRight: -15
                         }}>
-                            <TouchableOpacity style={{
-                                flex: 1,
-                                justifyContent:'center',
-                                alignItems:'center',
-                            }}>
-                                <Icon name='save' size={30} color={'black'}/>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    callPutUpdateNoteTableInfo()
+                                }}
+                                style={{
+                                    flex: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                }}>
+                                <Icon name='save' size={30} color={'black'} />
                             </TouchableOpacity>
                         </View>
                     </View>

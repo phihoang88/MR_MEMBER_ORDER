@@ -17,10 +17,13 @@ const OrderScreen = (props) => {
     // <--------------------------initload--------------------------------START>
     //set init list product order
     const [listProductsOrder, setListProductsOrder] = useState([])
+    //set refresh status
+    const [isRefreshing, setRefreshing] = useState(false)
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('focus', () => {
             //after goback
+            setRefreshing(false)
             callGetListProductOrder()
         });
         //initload
@@ -32,9 +35,13 @@ const OrderScreen = (props) => {
     // <--------------------------functions--------------------------------START>
     const callGetListProductOrder = async () => {
         try {
+            setRefreshing(true)
             const res = await axios.get(`${apis.TABLE_PATH}/getProductOrderList`)
             if (res.data.status == contents.status_ok) {
                 setListProductsOrder(res.data.data)
+            }
+            else{
+                setListProductsOrder([])
             }
         }
         catch (error) {
@@ -52,6 +59,10 @@ const OrderScreen = (props) => {
             'table_stt': 'Ordering',
         })
     }
+
+    useEffect(()=>{
+        setRefreshing(false)
+    },[isRefreshing])
     // <--------------------------functions--------------------------------END>
 
     return <View style={styles.container}>
@@ -68,6 +79,9 @@ const OrderScreen = (props) => {
                         getTableClick={getTableClick}
                     />}
                 keyExtractor={item => item.product_id}
+                onRefresh={callGetListProductOrder}
+                refreshing={isRefreshing}
+                progressViewOffset={100}
             />
         </ImageBackground>
     </View>

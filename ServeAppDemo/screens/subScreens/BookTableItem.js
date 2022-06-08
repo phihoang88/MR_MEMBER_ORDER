@@ -6,6 +6,7 @@ import {
     Dimensions,
     TouchableOpacity
 } from 'react-native'
+import images from '../../config/images'
 
 const BookTableItem = (props) => {
     let {
@@ -24,6 +25,7 @@ const BookTableItem = (props) => {
         table_stt_nm,
     } = props.table
     let onPress = props.onPress
+    let seleted = props.selected
 
     return <TouchableOpacity
         onPress={onPress}
@@ -33,7 +35,8 @@ const BookTableItem = (props) => {
             borderWidth: table_stt_nm == 'Emptying' ? 1 : 10,
             margin: 1,
             borderRadius: 15,
-            borderColor:table_stt_nm == 'Emptying' ? 'black' : 'blue'
+            borderColor:table_stt_nm == 'Emptying' ? 'black' : 'blue',
+            backgroundColor: props.index == seleted ? 'cyan' : 'white'
         }}>
         <View style={{
             flex: 80,
@@ -41,7 +44,9 @@ const BookTableItem = (props) => {
             alignItems: 'center'
         }}>
             <Image
-                source={require('../../assets/images/table1.png')}
+                source={{
+                    uri:images.tableImage
+                }}
                 style={{
                     flex: 1,
                     height: '100%',

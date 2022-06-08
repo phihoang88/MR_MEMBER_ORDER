@@ -17,7 +17,6 @@ import {
     LoginScreen,
     TableOrderScreen,
     ReceiptDetailScreen,
-    HomeScreen
 } from '../screens'
 import Tabbar from './Tabbar';
 
@@ -25,8 +24,7 @@ const Stack = createNativeStackNavigator();
 
 const navigator = (props) => {
     return <NavigationContainer>
-        <Stack.Navigator initialRouteName='HomeScreen' screenOptions={{ headerShown: false }}>
-            <Stack.Screen name={"HomeScreen"} component={HomeScreen} />
+        <Stack.Navigator initialRouteName='LoginScreen' screenOptions={{ headerShown: false }}>
             <Stack.Screen name={"LoginScreen"} component={LoginScreen} />
             <Stack.Screen name={"Tabbar"} component={Tabbar} />
             <Stack.Screen name={"TableOrderScreen"} component={TableOrderScreen} />

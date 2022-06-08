@@ -13,6 +13,7 @@ const ReceiptItem = (props) => {
         table_nm_vn,
         table_nm_en,
         table_nm_jp,
+        is_end,
         listProducts
     } = props.receipt
     let onPress = props.onPress
@@ -107,7 +108,7 @@ const ReceiptItem = (props) => {
             marginBottom: 5,
             borderWidth: 1,
             borderRadius: 15,
-            backgroundColor: colors.color_app
+            backgroundColor: is_end == 1 ? 'grey':'white'
         }}
         onPress={onPress}
     >
@@ -121,7 +122,24 @@ const ReceiptItem = (props) => {
                     fontWeight: 'bold'
                 }}>{table_nm_vn || table_nm_en || table_nm_jp}</Text>
             </View>
-            {product_order_stt_id == 0 && <View style={{
+            {is_end == 1 && <View style={{
+                borderRadius: 7,
+                justifyContent: 'center',
+                alignItems: 'flex-end',
+                marginRight: 5,
+                marginTop: 5,
+                paddingLeft: 10,
+                paddingRight: 10,
+                borderWidth:2
+            }}>
+                <Text style={{
+                    color: 'white',
+                    fontSize: 15,
+                    fontWeight: 'bold'
+                }}>Checkout</Text>
+            </View>
+            }
+            {is_end == 0 && product_order_stt_id == 0 && <View style={{
                 borderRadius: 7,
                 justifyContent: 'center',
                 alignItems: 'flex-end',
@@ -138,7 +156,7 @@ const ReceiptItem = (props) => {
                 }}>Serving</Text>
             </View>
             }
-            {product_order_stt_id == 1 && <View style={{
+            {is_end == 0 && product_order_stt_id == 1 && <View style={{
                 borderRadius: 7,
                 justifyContent: 'center',
                 alignItems: 'flex-end',

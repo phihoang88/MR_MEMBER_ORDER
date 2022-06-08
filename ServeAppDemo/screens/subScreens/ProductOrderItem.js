@@ -55,7 +55,8 @@ const ProductOrderItem = (props) => {
                         borderRadius: 15,
                         justifyContent: 'center',
                         alignItems: 'center',
-                        marginTop: -5,
+                        marginTop: -8,
+                        marginLeft:-3,
                         zIndex: 1
                     }}>
                         <Text style={{
@@ -98,7 +99,7 @@ const ProductOrderItem = (props) => {
 
     return <View style={{
         flex: 1,
-        backgroundColor: colors.color_app,
+        backgroundColor: 'white', //colors.color_app,
         marginBottom: 5,
         borderRadius: 15,
         flexDirection: 'row',

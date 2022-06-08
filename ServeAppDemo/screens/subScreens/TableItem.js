@@ -39,7 +39,7 @@ const TableItem = (props) => {
         }
     }
 
-    return <View style={{ flex: 1 }}>
+    return <View>
         <TouchableOpacity
             onPress={onPress}
             style={{

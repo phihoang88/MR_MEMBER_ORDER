@@ -20,8 +20,12 @@ const TableOrderItem = (props) => {
         price,
         product_count,
         product_order_stt_id,
-        count
+        count,
+        note_tx
     } = props.order
+
+    const [txtNote, setTxtNote] = useState(note_tx)
+
     const index = props.index
 
     function _getStatus(stt) {
@@ -85,10 +89,14 @@ const TableOrderItem = (props) => {
                     borderRadius: 15,
                 }}
                 placeholder={contents.cont_plh_note}
+                onChangeText={(text) => {
+                    setTxtNote(text)
+                    props.updateNote(text,index)
+                }}
+                value={txtNote}
             />
         </View>
     </View>
-
 }
 
 const styles = (stt) => StyleSheet.create({

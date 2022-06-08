@@ -26,6 +26,16 @@ const msg_err_receive = 'Receive error!'
 
 // TABLE ORDER SCREEN
 const msg_info_order_list_empty = 'Order list is emptying.'
+const msg_success_update_note = 'Update note successfully!'
+
+
+
+const msg_err_update_note = 'Update note failed'
+
+
+//Receipt 
+const msg_success_checkout = 'Checkout successfully!'
+const msg_err_checkout = 'Checkout failed!'
 
 const cont_create_table = 'Create new table?'
 const cont_plh_note = 'Please type note here...'
@@ -88,6 +98,17 @@ export default {
 
     //Table order screen
     msg_info_order_list_empty,
+    msg_success_update_note,
+
+
+
+    msg_err_update_note,
+
+
+    //Receipt 
+    msg_success_checkout,
+    msg_err_checkout,
+
 
 
     cont_create_table,

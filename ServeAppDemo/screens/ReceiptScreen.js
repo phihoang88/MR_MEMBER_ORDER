@@ -7,7 +7,7 @@ import {
     FlatList
 } from 'react-native'
 
-import { apis, images } from '../config'
+import { apis, contents, images } from '../config'
 import { ReceiptItem } from '../screens'
 import axios from 'axios'
 
@@ -19,11 +19,13 @@ const ReceiptScreen = (props) => {
 
     // <-------------------------------initload---------------------------------START>
     const [listReceipt, setListReceipt] = useState([])
+    const [isRefreshing, setRefreshing] = useState(false)
 
     //initload
     useEffect(() => {
         const unsub = navigation.addListener('focus', () => {
             //goback
+            setRefreshing(false)
             callGetTableOrderingList()
         })
         //initload
@@ -37,22 +39,31 @@ const ReceiptScreen = (props) => {
     // <-------------------------------function---------------------------------START>
     const callGetTableOrderingList = async () => {
         try {
+            setRefreshing(true)
             const res = await axios.get(`${apis.RECEIPT_PATH}/getListOrderForReceipt`)
-            setListReceipt(res.data.data)
+            if(res.data.status == contents.status_ok){
+                setListReceipt(res.data.data.filter(item => item.is_end == 0))
+            }
+            else{
+                setListReceipt([])
+            }
         }
         catch(error){
             console.log(`callGetTableOrderingList ${error}`)
         }
-        
     }
+
+    useEffect(() => {
+        setRefreshing(false)
+    },[isRefreshing])
     // <-------------------------------function---------------------------------END>
-
-
 
     return <View style={styles.container}>
         <ImageBackground
             style={styles.img_background}
-            source={images.backgroundApp}>
+            source={{
+                uri:images.backgroundApp
+            }}>
             <FlatList
                 data={listReceipt}
                 renderItem={({ item, index }) =>
@@ -67,6 +78,9 @@ const ReceiptScreen = (props) => {
                         }}
                     />}
                 keyExtractor={item => item.table_info_id}
+                onRefresh={callGetTableOrderingList}
+                refreshing={isRefreshing}
+                progressViewOffset={100}
             />
         </ImageBackground>
     </View>

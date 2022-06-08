@@ -1,4 +1,3 @@
-import HomeScreen from './HomeScreen'
 import LoginScreen from "./LoginScreen"
 import TableScreen from './TableScreen'
 import OrderScreen from './OrderScreen'
@@ -15,7 +14,6 @@ import ReceiptItem from './subScreens/ReceiptItem'
 import ReceiptDetailScreen from './ReceiptDetailScreen'
 import ReceiptDetailItem from './subScreens/ReceiptDetailItem'
 export {
-    HomeScreen,
     LoginScreen,
     TableScreen,
     OrderScreen,

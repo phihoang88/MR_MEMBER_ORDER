@@ -126,6 +126,7 @@ const TableScreen = (props) => {
                                     'table_info_id': item.table_info_id,
                                     'table_nm': item.table_nm_vn,
                                     'table_stt': item.table_stt_nm,
+                                    'note_tx' : item.note_tx
                                 })
                             }
                         }}

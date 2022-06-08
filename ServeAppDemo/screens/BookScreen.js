@@ -6,7 +6,8 @@ import {
     TextInput,
     Keyboard,
     TouchableOpacity,
-    FlatList
+    FlatList,
+    ImageBackground
 } from 'react-native'
 
 import { images, apis, system, colors, contents } from '../config'
@@ -36,7 +37,9 @@ const BookScreen = (props) => {
 
     //set selected table
     const [tableIdSelected, setTableIdSelected] = useState('')
+    const [tableInfoId, setTableInfoId] = useState(null)
     const [tableNmSelected, setTableNmSelected] = useState('')
+    const [selectedTableIndex, setSelectedTableIndex] = useState(null)
 
     //set show Date picker
     const [isShowDatePicker, setShowDatePicker] = useState(false)
@@ -79,7 +82,7 @@ const BookScreen = (props) => {
     //API get list table
     const callGetListTable = async () => {
         try {
-            const res = await axios.get(`${apis.TABLE_PATH}/getList`)
+            const res = await axios.get(`${apis.TABLE_INFO_PATH}/getList`)
             let objDt = res.data.data.filter(item => item.table_stt_nm == 'Emptying' || item.table_stt_nm == 'Booking')
             setListTable(objDt)
         } catch (error) {
@@ -90,11 +93,12 @@ const BookScreen = (props) => {
     //callPost insert order list to DB
     const callPostInsertTableInfo = async () => {
         try {
-            const res = await axios.post(`${apis.TABLE_PATH}/insertInfos`, {
+            const res = await axios.post(`${apis.TABLE_INFO_PATH}/insertOrUpdateBook`, {
+                "id": tableInfoId,
                 "tableId": tableIdSelected,
                 "tableSttId": 2, //Booking
-                "bookDt": system.systemDateString(),
-                "bookTm": system.systemTimeString(),
+                "bookDt": system.systemDateString(dateSelect),
+                "bookTm": system.systemTimeString(timeSelect),
                 "guessNm": txtGuessNm,
                 "guessCount": txtGuessCount,
                 "guessPhone": txtGuessPhone,
@@ -119,244 +123,267 @@ const BookScreen = (props) => {
     }
     //<-------------------------Function-------------------------END>
 
-    return <View style={{ flex: 100, padding: 5 }}>
-        {/* info */}
-        <View style={{
-            flex: 60,
-            borderWidth: 1,
-            marginBottom: 5,
-            borderRadius: 15,
-            paddingTop: 10,
-            paddingLeft: 10,
-            paddingRight: 10,
-            paddingBottom: 5,
-        }}>
-            <View style={{ flex: 88, flexDirection: 'row' }}>
-                {/* LABEL */}
-                <View style={{ flex: 30 }}>
-                    {/* Table NO */}
-                    <View style={[{ flex: 12 }, styles.center_start]}>
-                        <Text style={styles.label_tx}>Table</Text>
+    return <View style={{ flex: 100 }}>
+        <ImageBackground style={{ flex: 100, padding: 5 }}
+            source={{
+                uri: images.backgroundApp
+            }}>
+
+
+            {/* info */}
+            <View style={{
+                flex: 60,
+                borderWidth: 1,
+                marginBottom: 5,
+                borderRadius: 15,
+                paddingTop: 10,
+                paddingLeft: 10,
+                paddingRight: 10,
+                paddingBottom: 5,
+                backgroundColor: 'white'
+            }}>
+                <View style={{ flex: 88, flexDirection: 'row' }}>
+                    {/* LABEL */}
+                    <View style={{ flex: 30 }}>
+                        {/* Table NO */}
+                        <View style={[{ flex: 12 }, styles.center_start]}>
+                            <Text style={styles.label_tx}>Table</Text>
+                        </View>
+                        {/* Guess name */}
+                        <View style={[{ flex: 15 }, styles.center_s_mt5]}>
+                            <Text style={styles.label_tx}>Guess name</Text>
+                        </View>
+                        {/* Guess phone */}
+                        <View style={[{ flex: 15 }, styles.center_s_mt5]}>
+                            <Text style={styles.label_tx}>Guess phone</Text>
+                        </View>
+                        {/* Guess count */}
+                        <View style={[{ flex: 12 }, styles.center_s_mt5]}>
+                            <Text style={styles.label_tx}>Guess count</Text>
+                        </View>
+                        {/* Date */}
+                        <View style={[{ flex: 12 }, styles.center_s_mt5]}>
+                            <Text style={styles.label_tx}>Book date</Text>
+                        </View>
+                        {/* Time */}
+                        <View style={[{ flex: 12 }, styles.center_s_mt5]}>
+                            <Text style={styles.label_tx}>Book time</Text>
+                        </View>
+                        {/* Not */}
+                        <View style={[{ flex: 25 }, styles.center_s_mt5]}>
+                            <Text style={styles.label_tx}>Note</Text>
+                        </View>
                     </View>
-                    {/* Guess name */}
-                    <View style={[{ flex: 15 }, styles.center_s_mt5]}>
-                        <Text style={styles.label_tx}>Guess name</Text>
-                    </View>
-                    {/* Guess phone */}
-                    <View style={[{ flex: 15 }, styles.center_s_mt5]}>
-                        <Text style={styles.label_tx}>Guess phone</Text>
-                    </View>
-                    {/* Guess count */}
-                    <View style={[{ flex: 12 }, styles.center_s_mt5]}>
-                        <Text style={styles.label_tx}>Guess count</Text>
-                    </View>
-                    {/* Date */}
-                    <View style={[{ flex: 12 }, styles.center_s_mt5]}>
-                        <Text style={styles.label_tx}>Book date</Text>
-                    </View>
-                    {/* Time */}
-                    <View style={[{ flex: 12 }, styles.center_s_mt5]}>
-                        <Text style={styles.label_tx}>Book time</Text>
-                    </View>
-                    {/* Not */}
-                    <View style={[{ flex: 25 }, styles.center_s_mt5]}>
-                        <Text style={styles.label_tx}>Note</Text>
+                    {/* Contents */}
+                    <View style={{ flex: 70 }}>
+                        {/* Table NO */}
+                        <View style={[{ flex: 12.5 }, styles.center_all]}>
+                            <Text style={styles.label_content}>{tableNmSelected}</Text>
+                        </View>
+                        {/* Guess name */}
+                        <View style={[{ flex: 15 }, styles.center_mt5]}>
+                            <TextInput
+                                placeholder='Please type guess name here...'
+                                onChangeText={onChangeGuessNm}
+                                value={txtGuessNm}
+                                style={styles.input_content}
+                                maxLength={30} />
+                        </View>
+                        {/* Guess phone */}
+                        <View style={[{ flex: 15 }, styles.center_mt5]}>
+                            <TextInput
+                                placeholder='Please type guess phone here...'
+                                onChangeText={onChangeGuessPhone}
+                                value={txtGuessPhone}
+                                keyboardType='numeric'
+                                style={styles.input_content}
+                                maxLength={20} />
+                        </View>
+                        {/* Guess count */}
+                        <View style={[{ flex: 12, flexDirection: 'row' }, styles.center_mt5]}>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    if (txtGuessCount > 0) {
+                                        setGuessCount(txtGuessCount - 1)
+                                    }
+                                }}>
+                                <Icon name='minus-circle' size={25} color={'grey'} />
+                            </TouchableOpacity>
+                            <Text style={{
+                                height: 35,
+                                width: 70,
+                                borderWidth: 1,
+                                borderRadius: 10,
+                                textAlign: 'center',
+                                textAlignVertical: 'center',
+                                color: 'black',
+                                fontWeight: 'bold',
+                                fontSize: 18,
+                                marginLeft: 10,
+                                marginRight: 10
+                            }}>{txtGuessCount}</Text>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setGuessCount(txtGuessCount + 1)
+                                }}
+                            >
+                                <Icon name='plus-circle' size={25} color={'green'} />
+                            </TouchableOpacity>
+                        </View>
+                        {/* Date */}
+                        <View style={[{ flex: 12, flexDirection: 'row' }, styles.center_mt5]}>
+                            <View style={[{
+                                flex: 70,
+                                borderWidth: 1,
+                                borderRadius: 15,
+                                height: '100%'
+                            }, styles.center_all]}>
+                                <Text
+                                    style={styles.label_content}
+                                >{system.getDateFormat(dateSelect)}</Text>
+                            </View>
+                            <View style={[{
+                                flex: 30,
+                                height: '100%',
+                            }, styles.center_all]}>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setShowDatePicker(true)
+                                    }}
+                                >
+                                    <Icon name='calendar-alt' color={'green'} size={25} />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                        {/* Time */}
+                        <View style={[{ flex: 12, flexDirection: 'row' }, styles.center_mt5]}>
+                            <View style={[{
+                                flex: 70,
+                                borderWidth: 1,
+                                borderRadius: 15,
+                                height: '100%'
+                            }, styles.center_all]}>
+                                <Text
+                                    style={styles.label_content}
+                                >{system.getTimeFormat(timeSelect)}</Text>
+                            </View>
+                            <View style={[{
+                                flex: 30,
+                                height: '100%',
+                            }, styles.center_all]}>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setShowTimePicker(true)
+                                    }}
+                                >
+                                    <Icon name='calendar-alt' color={'green'} size={25} />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                        {/* Note */}
+                        <View style={{
+                            flex: 25,
+                            borderWidth: 1,
+                            borderRadius: 15,
+                            height: '100%',
+                            marginTop: 5,
+                            justifyContent: 'flex-start',
+                            alignItems: 'flex-start'
+                        }}>
+                            <TextInput style={{ fontSize: 12 }}
+                                multiline
+                                onChangeText={text => setNote(text)}
+                                value={txtNote}
+                            />
+                        </View>
+
                     </View>
                 </View>
-                {/* Contents */}
-                <View style={{ flex: 70 }}>
-                    {/* Table NO */}
-                    <View style={[{ flex: 12.5 }, styles.center_all]}>
-                        <Text style={styles.label_content}>{tableNmSelected}</Text>
-                    </View>
-                    {/* Guess name */}
+                <View style={{ flex: 12 }}>
+                    {/* Book button */}
                     <View style={[{ flex: 15 }, styles.center_mt5]}>
-                        <TextInput
-                            placeholder='Please type guess name here...'
-                            onChangeText={onChangeGuessNm}
-                            value={txtGuessNm}
-                            style={styles.input_content}
-                            maxLength={30} />
-                    </View>
-                    {/* Guess phone */}
-                    <View style={[{ flex: 15 }, styles.center_mt5]}>
-                        <TextInput
-                            placeholder='Please type guess phone here...'
-                            onChangeText={onChangeGuessPhone}
-                            value={txtGuessPhone}
-                            keyboardType='numeric'
-                            style={styles.input_content}
-                            maxLength={20} />
-                    </View>
-                    {/* Guess count */}
-                    <View style={[{ flex: 12, flexDirection: 'row' }, styles.center_mt5]}>
                         <TouchableOpacity
                             onPress={() => {
-                                if (txtGuessCount > 0) {
-                                    setGuessCount(txtGuessCount - 1)
+                                let msgErr = ''
+                                if (tableNmSelected == '') {
+                                    msgErr = msgErr + `${contents.msg_warn_nonselect_table}\n`
                                 }
-                            }}>
-                            <Icon name='minus-circle' size={25} color={'grey'} />
-                        </TouchableOpacity>
-                        <Text style={{
-                            height: 35,
-                            width: 70,
-                            borderWidth: 1,
-                            borderRadius: 10,
-                            textAlign: 'center',
-                            textAlignVertical: 'center',
-                            color: 'black',
-                            fontWeight: 'bold',
-                            fontSize: 18,
-                            marginLeft: 10,
-                            marginRight: 10
-                        }}>{txtGuessCount}</Text>
-                        <TouchableOpacity
-                            onPress={() => {
-                                setGuessCount(txtGuessCount + 1)
+                                if (txtGuessNm == '') {
+                                    msgErr = msgErr + `${contents.msg_warn_empty_guess_nm}\n`
+                                }
+                                if (txtGuessPhone == null) {
+                                    msgErr = msgErr + `${contents.msg_warn_empty_guess_phone}\n`
+                                }
+                                if (txtGuessCount == 0) {
+                                    msgErr = msgErr + `${contents.msg_warn_empty_guess}\n`
+                                }
+                                if (msgErr != '') {
+                                    setMsgError(msgErr)
+                                    setShowValidMsg(true)
+                                }
+                                else {
+                                    setShowConfirmBook(true)
+                                }
                             }}
-                        >
-                            <Icon name='plus-circle' size={25} color={'green'} />
+                            style={[{
+                                flex: 1,
+                                backgroundColor: 'green',
+                                width: '60%',
+                                borderRadius: 20
+                            }, styles.center_all]}>
+                            <Text style={{
+                                color: 'white',
+                                fontWeight: 'bold'
+                            }}>BOOK TABLE</Text>
                         </TouchableOpacity>
                     </View>
-                    {/* Date */}
-                    <View style={[{ flex: 12, flexDirection: 'row' }, styles.center_mt5]}>
-                        <View style={[{
-                            flex: 70,
-                            borderWidth: 1,
-                            borderRadius: 15,
-                            height: '100%'
-                        }, styles.center_all]}>
-                            <Text
-                                style={styles.label_content}
-                            >{system.getDateFormat(dateSelect)}</Text>
-                        </View>
-                        <View style={[{
-                            flex: 30,
-                            height: '100%',
-                        }, styles.center_all]}>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    setShowDatePicker(true)
-                                }}
-                            >
-                                <Icon name='calendar-alt' color={'green'} size={25} />
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                    {/* Time */}
-                    <View style={[{ flex: 12, flexDirection: 'row' }, styles.center_mt5]}>
-                        <View style={[{
-                            flex: 70,
-                            borderWidth: 1,
-                            borderRadius: 15,
-                            height: '100%'
-                        }, styles.center_all]}>
-                            <Text
-                                style={styles.label_content}
-                            >{system.getTimeFormat(timeSelect)}</Text>
-                        </View>
-                        <View style={[{
-                            flex: 30,
-                            height: '100%',
-                        }, styles.center_all]}>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    setShowTimePicker(true)
-                                }}
-                            >
-                                <Icon name='calendar-alt' color={'green'} size={25} />
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                    {/* Note */}
-                    <View style={{
-                        flex: 25,
-                        borderWidth: 1,
-                        borderRadius: 15,
-                        height: '100%',
-                        marginTop: 5,
-                        justifyContent: 'flex-start',
-                        alignItems: 'flex-start'
-                    }}>
-                        <TextInput style={{ fontSize: 12 }}
-                            multiline
-                            onChangeText={text => setNote(text)}
-                            value={txtNote}
-                        />
-                    </View>
-
                 </View>
             </View>
-            <View style={{ flex: 12 }}>
-                {/* Book button */}
-                <View style={[{ flex: 15 }, styles.center_mt5]}>
-                    <TouchableOpacity
-                        onPress={() => {
-                            let msgErr = ''
-                            if (tableNmSelected == '') {
-                                msgErr = msgErr + `${contents.msg_warn_nonselect_table}\n`
-                            }
-                            if (txtGuessNm == '') {
-                                msgErr = msgErr + `${contents.msg_warn_empty_guess_nm}\n`
-                            }
-                            if (txtGuessPhone == null) {
-                                msgErr = msgErr + `${contents.msg_warn_empty_guess_phone}\n`
-                            }
-                            if (txtGuessCount == 0) {
-                                msgErr = msgErr + `${contents.msg_warn_empty_guess}\n`
-                            }
-                            if (msgErr != '') {
-                                setMsgError(msgErr)
-                                setShowValidMsg(true)
-                            }
-                            else {
-                                setShowConfirmBook(true)
-                            }
-                        }}
-                        style={[{
-                            flex: 1,
-                            backgroundColor: 'green',
-                            width: '60%',
-                            borderRadius: 20
-                        }, styles.center_all]}>
-                        <Text style={{
-                            color: 'white',
-                            fontWeight: 'bold'
-                        }}>BOOK TABLE</Text>
-                    </TouchableOpacity>
-                </View>
+
+            {/* list table */}
+            <View style={{
+                flex: 40,
+                borderWidth: 1,
+                borderRadius: 15,
+                display: isShowKeyBoard == true ? 'none' : 'flex',
+                padding: 5,
+                backgroundColor: 'white'
+            }}>
+                <FlatList
+                    data={listTable}
+                    numColumns={3}
+                    renderItem={({ item, index }) =>
+                        <BookTableItem
+                            table={item}
+                            key={index}
+                            index={index}
+                            selected={selectedTableIndex}
+                            onPress={() => {
+                                setSelectedTableIndex(index)
+                                setTableIdSelected(item.table_id)
+                                setTableInfoId(item.table_info_id)
+                                setTableNmSelected(item.table_nm_vn || item.table_nm_en || item.table_nm_jp)
+                                setGuessCount(item.guess_count ? parseInt(item.guess_count) : 0)
+                                onChangeGuessNm(item.guess_nm)
+                                onChangeGuessPhone(item.guess_phone)
+                                if (item.book_dt != null) {
+                                    setDateSelect(system.getDateFormatFromString(item.book_dt))
+                                    setTimeSelect(system.getTimeFormatFromString(item.book_dt + item.book_tm))
+                                }
+                                else {
+                                    setDateSelect(new Date())
+                                    setTimeSelect(new Date())
+                                }
+                                setNote(item.note_tx)
+                            }}
+                        />}
+                //keyExtractor={item => item.table_id}
+                //onRefresh={setOrderTmpByAmount}
+                // refreshing={isFetchingOrderLstTmp}
+                // progressViewOffset={100}
+                />
             </View>
-        </View>
-
-        {/* list table */}
-        <View style={{
-            flex: 40,
-            borderWidth: 1,
-            borderRadius: 15,
-            display: isShowKeyBoard == true ? 'none' : 'flex',
-            padding: 5
-        }}>
-            <FlatList
-                data={listTable}
-                numColumns={3}
-                renderItem={({ item, index }) =>
-                    <BookTableItem
-                        table={item}
-                        key={index}
-                        index={index}
-                        onPress={() => {
-                            setTableIdSelected(item.table_id)
-                            setTableNmSelected(item.table_nm_vn || item.table_nm_en || item.table_nm_jp)
-                        }}
-                    />}
-            //keyExtractor={item => item.table_id}
-            //onRefresh={setOrderTmpByAmount}
-            // refreshing={isFetchingOrderLstTmp}
-            // progressViewOffset={100}
-            />
-        </View>
-
+        </ImageBackground>
         <DatePicker
             modal
             mode='date'

@@ -18,7 +18,6 @@ const ReceiptDetailItem = (props) => {
         product_order_stt_id
     } = props.detail
     let index = props.index
-    console.log(props.detail)
 
     return <View style={{
         marginBottom: 5,

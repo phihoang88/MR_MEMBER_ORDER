@@ -9,10 +9,13 @@ import {
     Keyboard,
     BackHandler,
 } from 'react-native'
-import { colors } from '../config'
+import { RadioButton } from 'react-native-paper'
+import { apis, colors, system, contents } from '../config'
 import Icon from 'react-native-vector-icons/FontAwesome5'
 import { ReceiptDetailItem } from '../screens'
 import { useFocusEffect } from '@react-navigation/native'
+import axios from 'axios'
+import { Toast, ModalDialog } from '../components'
 const ReceiptDetailScreen = (props) => {
 
     const { navigation, route } = props
@@ -27,12 +30,27 @@ const ReceiptDetailScreen = (props) => {
         table_nm_vn,
         table_nm_en,
         table_nm_jp,
+        is_end
     } = route.params.receiptDetail
+
+    console.log(route.params)
 
     //set init sum Count
     const [sumCount, setSumCount] = useState(0)
     //set init sum price
     const [sumPrice, setSumPrice] = useState(0)
+    //set radio vat
+    const [checked, setChecked] = useState('10')
+    //set vat value
+    const [vatValue, setVatValue] = useState(null)
+    //set init input cash
+    const [cash, setCash] = useState(null)
+    //set init excess cash
+    const [excessCash, setExcessCash] = useState(0)
+    //set init final income
+    const [finalIncome, setFinalIncome] = useState(0)
+    //set init dialog confirm checkout
+    const [isShowConfirm, setShowConfirm] = useState(false)
 
     useEffect(() => {
         const unsub = navigation.addListener('focus', () => {
@@ -44,15 +62,49 @@ const ReceiptDetailScreen = (props) => {
         return unsub
     }, [navigation])
 
-
     //<-------------------------------initload-----------------------------END>
 
+    // insert table T_Table_receipt
+    const callPostReceipt = async () => {
+        try {
+            const res = await axios.post(`${apis.RECEIPT_PATH}/insert`, {
+                "tableInfoId": table_info_id,
+                "vat": checked,
+                "total": sumPrice,
+                "cash": cash,
+                "crtDt": system.systemDateTimeString(),
+                "crtUserId": "huy",
+                "crtPgmId": "Receipt Screen",
+                "delFg": "0"
+            })
+            if (res.data.status == contents.status_ok) {
+                Toast(contents.msg_success_checkout)
+                callPutUpdateTableInfo()
+            }
+            else {
+                Toast(contents.msg_err_checkout)
+            }
+        }
+        catch (error) {
+            console.log(error)
+        }
+    }
 
-
-
-    console.log(route.params)
-
-
+    // update table T_Table_info
+    const callPutUpdateTableInfo = async () => {
+        try {
+            const res = await axios.put(`${apis.TABLE_INFO_PATH}/updateAfterCheckout/${table_info_id}`)
+            if (res.data.status == contents.status_ok) {
+                Toast(contents.msg_success_checkout)
+            }
+            else {
+                Toast(contents.msg_err_checkout)
+            }
+        }
+        catch (error) {
+            console.log(error)
+        }
+    }
 
     //set show key board
     const [isShowKeyBoard, SetShowKeyBoard] = useState(false)
@@ -102,7 +154,12 @@ const ReceiptDetailScreen = (props) => {
             return prev + + current.count * current.price
         }, 0);
         setSumPrice(sumPrice)
+        setVatValue(Math.round(sumPrice * parseInt(checked) / 100))
     }
+
+    useEffect(() => {
+        setVatValue(Math.round(sumPrice * parseInt(checked) / 100))
+    }, [checked])
 
 
     return <View style={{ flex: 1 }}>
@@ -211,15 +268,13 @@ const ReceiptDetailScreen = (props) => {
                     </View>
                 </View>
 
-
-
                 {/* Calculate */}
                 <View style={{
                     flex: 25,
                     borderTopWidth: 1,
                 }}>
                     <View style={{
-                        flex: 75, borderBottomWidth: 1, flexDirection: 'row',
+                        flex: 1, borderBottomWidth: 1, flexDirection: 'row',
                     }}>
                         {/* No */}
                         <View style={{
@@ -235,9 +290,30 @@ const ReceiptDetailScreen = (props) => {
                             <Text style={{
                                 color: 'black'
                             }}>Sum</Text>
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center'
+                            }}>
+                                <Text style={{
+                                    color: 'black'
+                                }}>VAT(8%)</Text>
+                                <RadioButton
+                                    value="8"
+                                    status={checked == '8' ? 'checked' : 'unchecked'}
+                                    onPress={() => setChecked('8')}
+                                />
+                                <Text style={{
+                                    color: 'black'
+                                }}>VAT(10%)</Text>
+                                <RadioButton
+                                    value="10"
+                                    status={checked == '10' ? 'checked' : 'unchecked'}
+                                    onPress={() => setChecked('10')}
+                                />
+                            </View>
                             <Text style={{
                                 color: 'black'
-                            }}>VAT</Text>
+                            }}>Discount</Text>
                             <Text style={{
                                 color: 'black'
                             }}>Others</Text>
@@ -260,6 +336,9 @@ const ReceiptDetailScreen = (props) => {
                             }}>{sumCount}</Text>
                             <Text style={{
                                 color: 'black'
+                            }}>{checked}%</Text>
+                            <Text style={{
+                                color: 'black'
                             }}>x</Text>
                             <Text style={{
                                 color: 'black'
@@ -280,6 +359,9 @@ const ReceiptDetailScreen = (props) => {
                             }}>{sumPrice}</Text>
                             <Text style={{
                                 color: 'black'
+                            }}>{vatValue}</Text>
+                            <Text style={{
+                                color: 'black'
                             }}>x</Text>
                             <Text style={{
                                 color: 'black'
@@ -288,33 +370,7 @@ const ReceiptDetailScreen = (props) => {
                                 color: 'black',
                                 fontWeight: 'bold',
                                 fontSize: 16
-                            }}>{sumPrice}</Text>
-                        </View>
-                    </View>
-                    {/* Button */}
-                    <View style={{
-                        flex: 25,
-                        flexDirection: 'row',
-                        paddingTop: 2,
-                        paddingBottom: 2,
-                        borderBottomWidth: 1,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                    }}>
-                        <View style={{
-                            borderRadius: 10,
-                            backgroundColor: 'green',
-                            width: '50%'
-                        }}>
-                            <TouchableOpacity style={{
-                                flex: 1,
-                                justifyContent: 'center',
-                                alignItems: 'center'
-                            }}>
-                                <Text style={{
-                                    color: 'white'
-                                }}>EXPORT RECEIPT</Text>
-                            </TouchableOpacity>
+                            }}>{sumPrice + vatValue}</Text>
                         </View>
                     </View>
                 </View>
@@ -386,7 +442,21 @@ const ReceiptDetailScreen = (props) => {
                                         fontSize: 14,
                                         borderWidth: 1,
                                         borderRadius: 10,
-                                        width: '100%'
+                                        width: '100%',
+                                        height: '100%'
+                                    }}
+                                    keyboardType='numeric'
+                                    value={cash}
+                                    onChangeText={(cash) => {
+                                        setCash(cash)
+                                        if (parseInt(cash) > sumPrice + vatValue) {
+                                            setExcessCash(parseInt(cash) - (sumPrice + vatValue))
+                                            setFinalIncome(parseInt(cash) - (parseInt(cash) - (sumPrice + vatValue)))
+                                        }
+                                        else {
+                                            setExcessCash(0)
+                                            setFinalIncome(0)
+                                        }
                                     }}
                                 />
                             </View>
@@ -398,7 +468,7 @@ const ReceiptDetailScreen = (props) => {
                             }}>
                                 <Text style={{
                                     color: 'black'
-                                }}>120</Text>
+                                }}>{excessCash}</Text>
                             </View>
                             <View style={{
                                 flex: 30,
@@ -410,7 +480,7 @@ const ReceiptDetailScreen = (props) => {
                                     color: 'black',
                                     fontWeight: 'bold',
                                     fontSize: 16
-                                }}>5458</Text>
+                                }}>{finalIncome}</Text>
                             </View>
                         </View>
                     </View>
@@ -423,26 +493,59 @@ const ReceiptDetailScreen = (props) => {
                         borderTopWidth: 1,
                         justifyContent: 'center',
                         alignItems: 'center',
+                        display:is_end == 0 ? 'flex' : 'none'
                     }}>
-                        <View style={{
-                            borderRadius: 10,
-                            backgroundColor: 'orangered',
-                            width: '50%'
+                        <TouchableOpacity style={{
+                            flex: 50,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            height: '100%',
+                            backgroundColor: 'green',
+                            marginLeft: 20,
+                            marginRight: 20,
+                            borderRadius: 15
                         }}>
-                            <TouchableOpacity style={{
-                                flex: 1,
+                            <Text style={{
+                                color: 'white'
+                            }}>EXPORT RECEIPT</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setShowConfirm(true)
+                            }}
+                            style={{
+                                flex: 50,
                                 justifyContent: 'center',
-                                alignItems: 'center'
+                                alignItems: 'center',
+                                height: '100%',
+                                backgroundColor: 'orangered',
+                                marginLeft: 20,
+                                marginRight: 20,
+                                borderRadius: 15
                             }}>
-                                <Text style={{
-                                    color: 'white'
-                                }}>CHECK OUT</Text>
-                            </TouchableOpacity>
-                        </View>
+                            <Text style={{
+                                color: 'white'
+                            }}>CHECK OUT</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </View>
         </View>
+        <ModalDialog 
+            visible={isShowConfirm}
+            children={{
+                title: contents.title_notice,
+                message: `Check out Table ${table_nm_vn}?` ,
+                type:'yes/no'
+            }}
+            onYes={()=>{
+                setShowConfirm(false)
+                callPostReceipt()
+            }}
+            onNo={()=>{
+                setShowConfirm(false)
+            }}
+        />
     </View>
 }
 
