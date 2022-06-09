@@ -3,9 +3,11 @@ import {
     View,
     Text,
     StyleSheet,
-    TouchableOpacity
+    TouchableOpacity,
+    TextInput
 } from 'react-native'
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import { contents } from '../../config';
 
 const TableOrderItem = (props) => {
 
@@ -18,8 +20,12 @@ const TableOrderItem = (props) => {
         price,
         product_count,
         product_order_stt_id,
-        count
+        count,
+        note_tx
     } = props.order
+
+    const [txtNote, setTxtNote] = useState(note_tx)
+
     const index = props.index
 
     function _getStatus(stt) {
@@ -51,13 +57,15 @@ const TableOrderItem = (props) => {
     }
 
     return <View>
-        <View style={{ flexDirection: 'row', marginBottom: 20 }}>
+        <View style={{ flexDirection: 'row' }}>
             <View style={{ flex: 10 }}>
                 <Text style={styles(product_order_stt_id).tbText}>{index + 1}</Text>
             </View>
-            <View style={{ flex: 45 }}>
+            <TouchableOpacity
+                style={{ flex: 45 }}
+                onPress={() => { props.onSelected() }}>
                 <Text style={styles(product_order_stt_id).tbText}>{product_nm_vn || product_nm_en || product_nm_jp}</Text>
-            </View>
+            </TouchableOpacity>
             <View style={{ flex: 10 }}>
                 <Text style={styles(product_order_stt_id).tbText}>{product_count || count}</Text>
             </View>
@@ -66,8 +74,29 @@ const TableOrderItem = (props) => {
             </View>
             {_getStatus(product_order_stt_id)}
         </View>
+        <View style={{
+            flex: 1,
+            height: 40,
+            justifyContent: 'center',
+            alignItems: 'flex-end',
+            marginBottom:20
+        }}>
+            <TextInput
+                maxLength={40}
+                style={{
+                    width: '90%',
+                    borderWidth: 1,
+                    borderRadius: 15,
+                }}
+                placeholder={contents.cont_plh_note}
+                onChangeText={(text) => {
+                    setTxtNote(text)
+                    props.updateNote(text,index)
+                }}
+                value={txtNote}
+            />
+        </View>
     </View>
-
 }
 
 const styles = (stt) => StyleSheet.create({

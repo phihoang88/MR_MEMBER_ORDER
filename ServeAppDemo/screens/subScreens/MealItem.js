@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native'
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from 'react-native-vector-icons/FontAwesome5'
+import { images } from '../../config'
 
 const MealItem = (props) => {
     let {
@@ -16,12 +17,23 @@ const MealItem = (props) => {
 
     const { onPress } = props
 
+    const [imageError, setImageError] = useState(true)
+
+    const onImageNotFound = () => {
+        setImageError(false);
+    }
+
     return <View>
         <View style={styles.container}>
             <View style={styles.image_bg}>
                 <Image
-                    source={product_ava}
+                    source={
+                        imageError ?
+                            { uri: `${images.image_folder}/${product_ava}` } :
+                            require('../../assets/images/notfound.jpg')
+                    }
                     style={styles.image}
+                    onError={() => onImageNotFound()}
                 />
             </View>
             <View style={styles.meal}>
@@ -38,7 +50,7 @@ const MealItem = (props) => {
                 </TouchableOpacity>
             </View>
         </View>
-        
+
     </View>
 }
 
@@ -47,7 +59,7 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         marginBottom: 5,
-        borderBottomWidth:1
+        borderBottomWidth: 1
     },
     image_bg: {
         flex: 25,

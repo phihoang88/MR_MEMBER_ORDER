@@ -4,37 +4,85 @@ import {
     Text,
     StyleSheet,
     ImageBackground,
-    Image,
-    ScrollView,
     FlatList
 } from 'react-native'
-
-import { images } from '../config'
-import OrderItem from './subScreens/OrderItem'
-import { listMenu } from '../contents'
-
+import { apis, images, contents } from '../config'
+import { ProductOrderItem } from '../screens'
+import axios from 'axios'
 
 const OrderScreen = (props) => {
-    const [orders, setOrders] = useState(listMenu)
+    const { navigation, route } = props
+    const { navigate, goBack } = navigation
+
+    // <--------------------------initload--------------------------------START>
+    //set init list product order
+    const [listProductsOrder, setListProductsOrder] = useState([])
+    //set refresh status
+    const [isRefreshing, setRefreshing] = useState(false)
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('focus', () => {
+            //after goback
+            setRefreshing(false)
+            callGetListProductOrder()
+        });
+        //initload
+        callGetListProductOrder()
+        return unsubscribe;
+    }, [navigation])
+    // <--------------------------initload--------------------------------END>
+
+    // <--------------------------functions--------------------------------START>
+    const callGetListProductOrder = async () => {
+        try {
+            setRefreshing(true)
+            const res = await axios.get(`${apis.TABLE_PATH}/getProductOrderList`)
+            if (res.data.status == contents.status_ok) {
+                setListProductsOrder(res.data.data)
+            }
+            else{
+                setListProductsOrder([])
+            }
+        }
+        catch (error) {
+            console.log(`callGetListProductOrder ${error.message}`)
+        }
+    }
+
+    const getTableClick = (indexMeal, indexTable) => {
+        let meal = listProductsOrder[indexMeal]
+        let table = meal.orderItemInfos[indexTable]
+        navigate('TableOrderScreen', {
+            'table_id': table.table_id,
+            'table_info_id': table.table_info_id,
+            'table_nm': table.table_nm_vn,
+            'table_stt': 'Ordering',
+        })
+    }
+
+    useEffect(()=>{
+        setRefreshing(false)
+    },[isRefreshing])
+    // <--------------------------functions--------------------------------END>
 
     return <View style={styles.container}>
         <ImageBackground
             style={styles.img_background}
-            source={images.backgroundApp}>
-            {/* <ScrollView>
-                {orders.map(or => <OrderItem order={or} key={or.order_id}/>)}
-            </ScrollView> */}
+            source={{uri:images.backgroundApp}}>
             <FlatList
-                data={orders}
-                renderItem={({ item }) =>
-                    <OrderItem order={item}
-                               key={item.order_id}
-                               onPress={() => {
-                                    //alert(item.order_id)
-                               }} />}
-                keyExtractor={item => item.order_id}
+                data={listProductsOrder}
+                renderItem={({ item, index }) =>
+                    <ProductOrderItem
+                        proOrder={item}
+                        key={item.product_id}
+                        index={index}
+                        getTableClick={getTableClick}
+                    />}
+                keyExtractor={item => item.product_id}
+                onRefresh={callGetListProductOrder}
+                refreshing={isRefreshing}
+                progressViewOffset={100}
             />
-
         </ImageBackground>
     </View>
 }
@@ -47,11 +95,7 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 5
     }
-
-
 })
-
-
 
 export default OrderScreen
 

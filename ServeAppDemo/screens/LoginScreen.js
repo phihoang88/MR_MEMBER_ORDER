@@ -6,9 +6,9 @@ import {
     ImageBackground,
     TextInput,
     TouchableOpacity,
-    ToastAndroid
 } from 'react-native'
-import { images, apis } from '../config/index'
+import { images, apis, contents } from '../config/index'
+import { Toast } from '../components'
 
 import axios from 'axios'
 
@@ -20,44 +20,30 @@ const LoginScreen = (props) => {
     const [userId, onChangeId] = useState('')
     const [password, onChangePass] = useState('')
 
-    const GET_URL = apis.BASE_URL + '/listUser'
-    const POST_URL = apis.BASE_URL + '/login'
-
-    const callGet = async () => {
-        try {
-            const res = await axios.get(GET_URL)
-        } catch (error) {
-            console.log(error.message)
-        }
-    }
-
-    const callGetById = async (id) => {
-        try {
-        } catch (error) {
-            console.log(error.message)
-        }
-    }
-
     const callPost = async () => {
         try {
-            const res = await axios.post(`${POST_URL}`, {
+            const res = await axios.post(`${apis.USER_PATH}/login`, {
                 usernameOrEmail: userId,
                 password: password
             })
-            res.data.status == 'success' ? navigate('Tabbar') : showToast('Username,password not exists!')
+            if (res.data.status == 'success') {
+                Toast(contents.msg_login_ok)
+                navigate('Tabbar')
+            }
+            else {
+                Toast(contents.msg_login_failed)
+            }
         } catch (error) {
             console.log(error)
         }
     }
 
-    const showToast = (msg) => {
-        ToastAndroid.show(msg, ToastAndroid.SHORT, ToastAndroid.CENTER);
-    }
-
     return (
         <View style={styles.container}>
             <ImageBackground
-                source={images.backgroundApp}
+                source={{
+                    uri: images.backgroundApp,
+                }}
                 resizeMode='cover'
                 style={styles.container}>
 
@@ -84,10 +70,7 @@ const LoginScreen = (props) => {
                     </View>
                     <TouchableOpacity style={styles.button}
                         onPress={() => {
-                            // userId == '' || password == '' ? 
-                            // showToast("Vui lòng nhập username, password!") :
-                            // callPost() 
-                            navigate('Tabbar')
+                            userId == '' || password == '' ? Toast(contents.msg_err_input_empty) : callPost()
                         }}>
                         <Text style={styles.button_txt}>LOGIN</Text>
                     </TouchableOpacity>
@@ -143,7 +126,5 @@ const styles = StyleSheet.create({
     },
     button_txt: {
         color: 'white',
-
     }
-
 })
