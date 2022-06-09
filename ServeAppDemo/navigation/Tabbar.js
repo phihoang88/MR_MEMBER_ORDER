@@ -48,7 +48,7 @@ const Tabbar = (props) => {
         options={{
             tabBarLabel: 'Book',
             tabBarIcon: ({ color, size }) => (
-                <Icon name="user" color={color} size={20} />
+                <Icon name="file-signature" color={color} size={20} />
             ),
         }}/>
         <Tab.Screen 
@@ -57,7 +57,7 @@ const Tabbar = (props) => {
         options={{
             tabBarLabel: 'Receipt',
             tabBarIcon: ({ color, size }) => (
-                <Icon name="book" color={color} size={20} />
+                <Icon name="file-alt" color={color} size={20} />
             ),
         }} />
         <Tab.Screen 
@@ -66,7 +66,7 @@ const Tabbar = (props) => {
         options={{
             tabBarLabel: 'Personal',
             tabBarIcon: ({ color, size }) => (
-                <Icon name="user" color={color} size={20} />
+                <Icon name="user-circle" color={color} size={20} />
             ),
         }}/>
     </Tab.Navigator>

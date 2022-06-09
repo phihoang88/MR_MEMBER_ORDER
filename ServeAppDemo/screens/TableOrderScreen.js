@@ -162,7 +162,6 @@ const TableOrderScreen = (props) => {
             const res = await axios.get(`${apis.TABLE_ORDER_PATH}/getOrderingList/${tableInfoId}`)
             if (res.data.status == contents.status_ok) {
                 setListOrderTmp(res.data.data)
-                console.log(res.data.data)
                 let foundOrderNotDone = res.data.data.some(element => element.product_order_stt_id != "1")
                 if (!foundOrderNotDone) {
                     //Done
@@ -199,7 +198,6 @@ const TableOrderScreen = (props) => {
                     "crtPgmId": "table order",
                     "delFg": "0"
                 }))
-            console.log(orderList)
             if (orderList.length == 0) {
                 setNotiOrder(true)
             }

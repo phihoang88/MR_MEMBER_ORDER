@@ -33,8 +33,6 @@ const ReceiptDetailScreen = (props) => {
         is_end
     } = route.params.receiptDetail
 
-    console.log(route.params)
-
     //set init sum Count
     const [sumCount, setSumCount] = useState(0)
     //set init sum price
@@ -511,7 +509,16 @@ const ReceiptDetailScreen = (props) => {
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={() => {
-                                setShowConfirm(true)
+                                const found = listProducts.some( item => item.product_order_stt_id == 0)
+                                if(found){
+                                    Toast('Table is serving...Try it later!')
+                                }
+                                if(cash == null || finalIncome == 0 || excessCash == 0){
+                                    Toast('Please input cash!')
+                                }
+                                else{
+                                    setShowConfirm(true)
+                                } 
                             }}
                             style={{
                                 flex: 50,

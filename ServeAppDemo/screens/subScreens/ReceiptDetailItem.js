@@ -3,7 +3,7 @@ import {
     View,
     Text
 } from 'react-native'
-
+import Icon from 'react-native-vector-icons/FontAwesome5'
 
 const ReceiptDetailItem = (props) => {
 
@@ -38,10 +38,14 @@ const ReceiptDetailItem = (props) => {
             flex: 55,
             justifyContent: 'center',
             alignItems: 'center',
+            flexDirection:'row'
         }}>
             <Text style={{
-                color: 'black'
+                color: 'black',
+                marginRight:10
             }}>{product_nm_vn || product_nm_jp || product_nm_en}</Text>
+            {product_order_stt_id == 0 && <Icon name="hourglass-half" size={20} color={'grey'} />}
+            {product_order_stt_id == 1 && <Icon name="check-circle" size={20} color={'green'} />}
         </View>
         <View style={{
             flex: 15,

@@ -86,7 +86,7 @@ const BookScreen = (props) => {
             let objDt = res.data.data.filter(item => item.table_stt_nm == 'Emptying' || item.table_stt_nm == 'Booking')
             setListTable(objDt)
         } catch (error) {
-            console.log(`huy ${error.message}`)
+            console.log(`${error.message}`)
         }
     }
 

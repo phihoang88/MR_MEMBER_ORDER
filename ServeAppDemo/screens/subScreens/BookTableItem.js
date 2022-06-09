@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
     View,
     Text,
@@ -6,6 +6,7 @@ import {
     Dimensions,
     TouchableOpacity
 } from 'react-native'
+import { apis } from '../../config'
 import images from '../../config/images'
 
 const BookTableItem = (props) => {
@@ -26,7 +27,11 @@ const BookTableItem = (props) => {
     } = props.table
     let onPress = props.onPress
     let seleted = props.selected
+    const [imageError, setImageError] = useState(true)
 
+    const onImageNotFound = () => {
+        setImageError(false);
+    }
     return <TouchableOpacity
         onPress={onPress}
         style={{
@@ -35,7 +40,7 @@ const BookTableItem = (props) => {
             borderWidth: table_stt_nm == 'Emptying' ? 1 : 10,
             margin: 1,
             borderRadius: 15,
-            borderColor:table_stt_nm == 'Emptying' ? 'black' : 'blue',
+            borderColor: table_stt_nm == 'Emptying' ? 'black' : 'blue',
             backgroundColor: props.index == seleted ? 'cyan' : 'white'
         }}>
         <View style={{
@@ -44,15 +49,18 @@ const BookTableItem = (props) => {
             alignItems: 'center'
         }}>
             <Image
-                source={{
-                    uri:images.tableImage
-                }}
+                source={
+                    imageError ?
+                        { uri: `${images.image_folder}/${table_ava}` } :
+                        require('../../assets/images/notfound.jpg')
+                }
                 style={{
                     flex: 1,
                     height: '100%',
                     width: '100%',
                     resizeMode: 'center',
                 }}
+                onError={() => onImageNotFound()}
             />
         </View>
         <View style={{

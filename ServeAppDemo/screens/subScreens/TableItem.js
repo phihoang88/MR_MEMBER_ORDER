@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
     View,
     Text,
@@ -7,10 +7,17 @@ import {
     TouchableOpacity,
     Dimensions
 } from 'react-native'
-import { images,colors } from '../../config'
+import { images, colors } from '../../config'
 import Icon from 'react-native-vector-icons/FontAwesome5'
 
 const TableItem = (props) => {
+
+    const [imageError, setImageError] = useState(true)
+
+    const onImageNotFound = () => {
+        setImageError(false)
+    }
+
     let {
         table_info_id,
         table_id,
@@ -58,7 +65,7 @@ const TableItem = (props) => {
             }}>
             <Icon name='phone-alt'
                 size={40}
-                color={'red'}/>
+                color={'red'} />
         </TouchableOpacity>
         <TouchableOpacity
             style={{
@@ -89,17 +96,23 @@ const TableItem = (props) => {
                     flex: 50,
                     height: '100%',
                     width: '100%',
+                    padding:10
                 }}>
                     <Image
-                        source={{
-                            uri:images.tableImage
-                        }}
+                        source={
+                            imageError ?
+                                { uri: `${images.image_folder}/${table_ava}` } :
+                                require('../../assets/images/notfound.jpg')
+                        }
                         style={{
                             flex: 1,
                             height: '100%',
                             width: '100%',
                             resizeMode: 'contain',
-                        }} />
+                            borderRadius:20,
+                        }}
+                        onError={() => onImageNotFound()}
+                    />
                 </View>
 
                 <View style={{

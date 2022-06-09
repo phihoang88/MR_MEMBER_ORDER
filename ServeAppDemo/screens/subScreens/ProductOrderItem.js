@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import {
     View,
     Text,
@@ -23,7 +23,11 @@ const ProductOrderItem = (props) => {
     let getTableClick = props.getTableClick
     let mealIndex = props.index
     let onPress = props.onPress
+    const [imageError, setImageError] = useState(true)
 
+    const onImageNotFound = () => {
+        setImageError(false)
+    }
     function ListTableOrder() {
         let maxItemRow = 3
         let tableRow = []
@@ -56,7 +60,7 @@ const ProductOrderItem = (props) => {
                         justifyContent: 'center',
                         alignItems: 'center',
                         marginTop: -8,
-                        marginLeft:-3,
+                        marginLeft: -3,
                         zIndex: 1
                     }}>
                         <Text style={{
@@ -80,7 +84,8 @@ const ProductOrderItem = (props) => {
                     <View style={{
                         flex: 40,
                         justifyContent: 'center',
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        marginBottom: 5
                     }}>
                         <Text style={{
                             color: 'black'
@@ -109,13 +114,18 @@ const ProductOrderItem = (props) => {
         <View style={{
             flex: 30,
         }}>
-            <Image source={{ uri: `${images.root}/${product_avatar}` }}
+            <Image source={
+                imageError ? 
+                { uri: `${images.image_folder}/${product_avatar}` } : 
+                require('../../assets/images/notfound.jpg')
+            }
                 style={{
                     height: 100,
                     width: 100,
                     borderRadius: 15,
                     resizeMode: 'cover',
                 }}
+                onError={() => onImageNotFound()}
             />
         </View>
 
