@@ -27,13 +27,15 @@ const BookTableItem = (props) => {
     } = props.table
     let onPress = props.onPress
     let seleted = props.selected
+    let onLongPress = props.onLongPress
     const [imageError, setImageError] = useState(true)
 
     const onImageNotFound = () => {
-        setImageError(false);
+        setImageError(false)
     }
     return <TouchableOpacity
         onPress={onPress}
+        onLongPress={onLongPress}
         style={{
             height: Dimensions.get('window').height / 2 / 3,
             width: Dimensions.get('window').width / 3 - 10,

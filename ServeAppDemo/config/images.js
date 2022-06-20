@@ -1,6 +1,9 @@
+const image_folder = 'https://mresweb.azurewebsites.net/image'
+const backgroundApp = `${image_folder}/bg.jpg`
+const tableImage = `${image_folder}/table1.png`
+
 export default {
-    root : 'https://meosys.com/mrapi/images',
-    backgroundApp: 'https://meosys.com/mrapi/images/bg.jpg',
-    tableImage: 'https://meosys.com/mrapi/images/table1.png',
-    image_folder: 'https://meosys.com/mrapi/images'
+    image_folder,
+    backgroundApp,
+    tableImage,
 }
