@@ -161,15 +161,20 @@ const TableOrderScreen = (props) => {
         try {
             const res = await axios.get(`${apis.TABLE_ORDER_PATH}/getOrderingList/${tableInfoId}`)
             if (res.data.status == contents.status_ok) {
-                setListOrderTmp(res.data.data)
-                let foundOrderNotDone = res.data.data.some(element => element.product_order_stt_id != "1")
-                if (!foundOrderNotDone) {
-                    //Done
-                    callPutUpdateTableStatus(3)
+                if (res.data.data != null) {
+                    setListOrderTmp(res.data.data)
+                    let foundOrderNotDone = res.data.data.some(element => element.product_order_stt_id != "1")
+                    if (!foundOrderNotDone) {
+                        //Done
+                        callPutUpdateTableStatus(3)
+                    }
+                    else {
+                        // Ordering
+                        callPutUpdateTableStatus(4)
+                    }
                 }
-                else {
-                    // Ordering
-                    callPutUpdateTableStatus(4)
+                else{
+                    setListOrderTmp([])
                 }
             }
             else {
@@ -184,13 +189,13 @@ const TableOrderScreen = (props) => {
     //callPost insert order list to DB
     const callPostInsertOrders = async () => {
         try {
-            let orderList = listOrderTmp.filter(item => item.product_order_stt_id == null)
+            let orderList = listOrderTmp.filter(item => item.product_order_stt_id == "")
                 .map(item => ({
                     "tableInfoId": tableInfoId,
                     "productId": item.product_id,
                     "count": item.product_count,
                     "productOrderSttId": "0",
-                    "noteTx" : item.note_tx,
+                    "noteTx": item.note_tx,
                     "orderDt": system.systemDateString(),
                     "orderTm": system.systemTimeString(),
                     "crtDt": system.systemDateTimeString(),
@@ -246,7 +251,7 @@ const TableOrderScreen = (props) => {
     //callPut update note
     const callPutUpdateNoteTableInfo = async () => {
         try {
-            const res = await axios.put(`${apis.TABLE_INFO_PATH}/updateNote/${tableInfoId}`,{txtNote})
+            const res = await axios.put(`${apis.TABLE_INFO_PATH}/updateNote/${tableInfoId}`, { txtNote })
             if (res.data.status == contents.status_ok) {
                 Toast(contents.msg_success_update_note)
             }
@@ -292,7 +297,7 @@ const TableOrderScreen = (props) => {
     //set List order temp
     function setOrderTmpByAmount(data) {
         setFetchingOrderLstTmp(true)
-        data.product_order_stt_id = null     //not yet order
+        data.product_order_stt_id = ""     //not yet order
         data.product_count = 1
         listOrderTmp.push(data)
         setListOrderTmp(listOrderTmp)
@@ -305,7 +310,7 @@ const TableOrderScreen = (props) => {
         setListOrderTmp(listOrderTmp)
     }
 
-    function updateNote(text,index){
+    function updateNote(text, index) {
         listOrderTmp[index].note_tx = text
     }
 
@@ -444,7 +449,7 @@ const TableOrderScreen = (props) => {
                                 order={item}
                                 key={index}
                                 index={index}
-                                updateNote = {updateNote}
+                                updateNote={updateNote}
                                 onSelected={() => {
                                     // setNote(txtNote + ' ' + item.product_nm_vn + ' :')
                                 }}

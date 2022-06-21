@@ -29,7 +29,7 @@ const TableOrderItem = (props) => {
     const index = props.index
 
     function _getStatus(stt) {
-        if (stt == 0) {
+        if (stt == "0") {
             return <View style={styles('').status}>
                 <TouchableOpacity
                     onPress={() => {
@@ -39,7 +39,7 @@ const TableOrderItem = (props) => {
                 </TouchableOpacity>
             </View>
         }
-        else if (stt == 1) {
+        else if (stt == "1") {
             return <View style={styles('').status}>
                 <Icon name="check-circle" size={18} color={'grey'} />
             </View>

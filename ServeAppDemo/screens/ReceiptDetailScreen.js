@@ -93,7 +93,7 @@ const ReceiptDetailScreen = (props) => {
         try {
             const res = await axios.put(`${apis.TABLE_INFO_PATH}/updateAfterCheckout/${table_info_id}`)
             if (res.data.status == contents.status_ok) {
-                Toast(contents.msg_success_checkout)
+                goBack()
             }
             else {
                 Toast(contents.msg_err_checkout)

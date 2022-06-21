@@ -52,6 +52,9 @@ const BookScreen = (props) => {
     const [isShowValidMsg, setShowValidMsg] = useState(false)
     const [isShowConfirmBook, setShowConfirmBook] = useState(false)
 
+    //set init show confirm cancel 
+    const [isShowConfirmCancel, setShowConfirmCancel] = useState(false)
+
     //initload function
     useEffect(() => {
         const unsubscribe = navigation.addListener('focus', () => {
@@ -121,6 +124,28 @@ const BookScreen = (props) => {
             console.log(`callPostInsertTableInfo ${error}`)
         }
     }
+
+    // update table T_Table_info => cancel book
+    const callPutCancelBookTable = async () => {
+        try {
+            if(tableInfoId == null){
+                Toast("Please choose any booked table!")
+            } 
+            else{
+                const res = await axios.put(`${apis.TABLE_INFO_PATH}/updateAfterCheckout/${tableInfoId}`)
+                if (res.data.status == contents.status_ok) {
+                    callGetListTable()
+                    Toast("Cancel successfully!")
+                }
+                else {
+                    Toast("Cancel unsuccessfully!")
+                }
+            }
+        }
+        catch (error) {
+            console.log(error)
+        }
+    }
     //<-------------------------Function-------------------------END>
 
     return <View style={{ flex: 100 }}>
@@ -128,8 +153,6 @@ const BookScreen = (props) => {
             source={{
                 uri: images.backgroundApp
             }}>
-
-
             {/* info */}
             <View style={{
                 flex: 60,
@@ -326,7 +349,7 @@ const BookScreen = (props) => {
                                 }
                             }}
                             style={[{
-                                flex: 1,
+                                flex: 50,
                                 backgroundColor: 'green',
                                 width: '60%',
                                 borderRadius: 20
@@ -375,6 +398,9 @@ const BookScreen = (props) => {
                                     setTimeSelect(new Date())
                                 }
                                 setNote(item.note_tx)
+                            }}
+                            onLongPress={() => {
+                                setShowConfirmCancel(true)
                             }}
                         />}
                 //keyExtractor={item => item.table_id}
@@ -434,6 +460,21 @@ const BookScreen = (props) => {
             }}
             onNo={() => {
                 setShowConfirmBook(false)
+            }}
+        />
+        <ModalDialog
+            visible={isShowConfirmCancel}
+            children={{
+                title: contents.title_confirm,
+                message: `Cancel Table ${tableNmSelected} ?`,
+                type: 'yes/no'
+            }}
+            onYes={() => {
+                setShowConfirmCancel(false)
+                callPutCancelBookTable()
+            }}
+            onNo={() => {
+                setShowConfirmCancel(false)
             }}
         />
     </View>

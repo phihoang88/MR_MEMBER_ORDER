@@ -12,7 +12,7 @@ const MealItem = (props) => {
         price,
         price_show,
         description,
-        product_ava,
+        product_avatar,
     } = props.product
 
     const { onPress } = props
@@ -29,7 +29,7 @@ const MealItem = (props) => {
                 <Image
                     source={
                         imageError ?
-                            { uri: `${images.image_folder}/${product_ava}` } :
+                            { uri: `${images.image_folder}/${product_avatar}` } :
                             require('../../assets/images/notfound.jpg')
                     }
                     style={styles.image}
