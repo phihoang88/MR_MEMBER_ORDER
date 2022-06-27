@@ -18,11 +18,14 @@ import DatePicker from 'react-native-date-picker'
 import Icon from 'react-native-vector-icons/FontAwesome5'
 
 import { ModalDialog, Toast } from '../components'
+import { getLoginInfo } from '../lib/pushnotification_helper'
 
 const BookScreen = (props) => {
 
     const { navigation, route } = props
     const { navigate, goBack } = navigation
+    //get userId
+    const [userId, setUserId] = useState('')
 
     // <-----------------------InitLoad------------------------START>
     //set show key board
@@ -57,6 +60,7 @@ const BookScreen = (props) => {
 
     //initload function
     useEffect(() => {
+        getUserId()
         const unsubscribe = navigation.addListener('focus', () => {
             //after goback
             //call Api load Table list
@@ -67,6 +71,11 @@ const BookScreen = (props) => {
         callGetListTable()
         return unsubscribe;
     }, [navigation])
+
+    const getUserId = async () => {
+        let data = await getLoginInfo()
+        setUserId(data.userId)
+    }
     // <-----------------------InitLoad------------------------END>
 
 
@@ -108,8 +117,8 @@ const BookScreen = (props) => {
                 "isEnd": "0",
                 "noteTx": txtNote,
                 "crtDt": system.systemDateTimeString(),
-                "crtUserId": "huy",
-                "crtPgmId": "book screen",
+                "crtUserId": userId,
+                "crtPgmId": system.BOOK_SCREEN,
                 "delFg": "0"
             })
             if (res.data.status == contents.status_ok) {
@@ -128,10 +137,10 @@ const BookScreen = (props) => {
     // update table T_Table_info => cancel book
     const callPutCancelBookTable = async () => {
         try {
-            if(tableInfoId == null){
+            if (tableInfoId == null) {
                 Toast("Please choose any booked table!")
-            } 
-            else{
+            }
+            else {
                 const res = await axios.put(`${apis.TABLE_INFO_PATH}/updateAfterCheckout/${tableInfoId}`)
                 if (res.data.status == contents.status_ok) {
                     callGetListTable()

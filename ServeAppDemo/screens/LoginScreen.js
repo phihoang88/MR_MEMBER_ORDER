@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
     View,
     Text,
@@ -9,8 +9,25 @@ import {
 } from 'react-native'
 import { images, apis, contents } from '../config/index'
 import { Toast } from '../components'
+import {
+    getLoginInfo,
+    setLoginInfo,
+    clearLoginInfo,
+
+    getNewFCMToken,
+    getCurrentFCMToken,
+    setFCMToken,
+    subForDeviceToTopic,
+    unsubForDeviceToTopic,
+    clearFCMToken
+
+
+
+} from '../lib/pushnotification_helper'
 
 import axios from 'axios'
+
+import DeviceInfo from 'react-native-device-info'
 
 const LoginScreen = (props) => {
 
@@ -20,6 +37,63 @@ const LoginScreen = (props) => {
     const [userId, onChangeId] = useState('')
     const [password, onChangePass] = useState('')
 
+    useEffect(() => {
+        autoLogin()
+    }, [])
+
+    const autoLogin = async () => {
+        try {
+            let loginInfo = await getLoginInfo()
+            if (loginInfo.loginTm) {
+                let nowHour = new Date().getHours()
+                if (nowHour < 24 && nowHour >= 6) {
+                    await setupFCMTokenforNotification()
+                    navigate('Tabbar')
+                }
+                else {
+                    await clearLoginInfo()
+                }
+            }
+        }
+        catch (error) {
+            console.log(`autoLogin ${error}`)
+        }
+    }
+
+    const setupFCMTokenforNotification = async () => {
+        //check change token device
+        let newToken = await getNewFCMToken()
+        let currToken = await getCurrentFCMToken()
+        // first login
+        if (!currToken) {
+            //check exists DB => unsub newest token
+            const res = await axios.get(`${apis.DEVICE_TOKEN}/getByDeviceId/${DeviceInfo.getUniqueId()}`)
+            if (res.data.status == 'success' && res.data.data) {
+                //call api unsubscribe for device token 
+                await unsubForDeviceToTopic(apis.TOPIC_MEMBER, res.data.data.deviceTokenNew)
+            }
+            //call api insert save token for device
+            await callPostInsertDeviceToken(currToken, newToken)
+            //call api subscribe for device token 
+            await subForDeviceToTopic(apis.TOPIC_MEMBER, newToken)
+            //set token to local store
+            await setFCMToken(newToken)
+        }
+        else {
+            //token has changed
+            if (newToken != currToken) {
+                //call api insert save token for device
+                await callPostInsertDeviceToken(currToken, newToken)
+                //call api unsubscribe for device token 
+                await unsubForDeviceToTopic(apis.TOPIC_MEMBER, currToken)
+                //call api subscribe for device token 
+                await subForDeviceToTopic(apis.TOPIC_MEMBER, newToken)
+                //set token to local store
+                await setFCMToken(newToken)
+            }
+        }
+    }
+
     const callPost = async () => {
         try {
             const res = await axios.post(`${apis.USER_PATH}/login`, {
@@ -28,6 +102,8 @@ const LoginScreen = (props) => {
             })
             if (res.data.status == 'success') {
                 Toast(contents.msg_login_ok)
+                await setLoginInfo(userId)
+                await setupFCMTokenforNotification()
                 navigate('Tabbar')
             }
             else {
@@ -35,6 +111,20 @@ const LoginScreen = (props) => {
             }
         } catch (error) {
             console.log(error)
+        }
+    }
+
+    const callPostInsertDeviceToken = async (tkOld, tkNew) => {
+        try {
+            const res = await axios.post(`${apis.DEVICE_TOKEN}/insert`, {
+                "deviceId": DeviceInfo.getUniqueId(),
+                "deviceTokenOld": tkOld,
+                "deviceTokenNew": tkNew
+            })
+            return res.data.status
+        }
+        catch (error) {
+            console.log(`callPostInsertDeviceToken ${error}`)
         }
     }
 

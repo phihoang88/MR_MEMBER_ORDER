@@ -65,6 +65,14 @@ const getDateTimeFormat = (date,time) => {
     return
 }
 
+const LOGIN_SCREEN = "MRE-FE-0011"
+const TABLE_SCREEN = "MRE-FE-0021"
+const TABLE_ORDER_SCREEN = "MRE-FE-0022"
+const RECEIPT_SCREEN = "MRE-FE-0023"
+const RECEIPT_DETAIL_SCREEN = "MRE-FE-0024"
+const BOOK_SCREEN = "MRE-FE-0030"
+const PERSONAL_SCREEN = "MRE-FE-0040"
+
 export default{
     systemDateTimeString,
     systemDateString,
@@ -73,5 +81,12 @@ export default{
     getTimeFormat,
     getTimeFormatByString,
     getDateFormatFromString,
-    getTimeFormatFromString
+    getTimeFormatFromString,
+    LOGIN_SCREEN,
+    TABLE_SCREEN,
+    TABLE_ORDER_SCREEN,
+    RECEIPT_SCREEN,
+    RECEIPT_DETAIL_SCREEN,
+    BOOK_SCREEN,
+    PERSONAL_SCREEN
 }

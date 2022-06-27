@@ -6,13 +6,32 @@ import {
     TouchableOpacity,
 
 } from 'react-native'
-import { images } from '../config'
+import { images,apis } from '../config'
+import {
+    clearFCMToken,
+    clearLoginInfo,
+    getCurrentFCMToken,
+    unsubForDeviceToTopic,
+} from '../lib/pushnotification_helper'
 
 
 const PersonalScreen = (props) => {
 
     const { navigation, route } = props
     const { navigate, goBack } = navigation
+
+    const unsubDeviceToTopic = async () => {
+        try {
+            let currToken = await getCurrentFCMToken()
+            //call api unsubscribe for device token 
+            await unsubForDeviceToTopic(apis.TOPIC_MEMBER, currToken)
+
+            await clearFCMToken()
+        }
+        catch (error) {
+            console.log(error)
+        }
+    }
 
     return <View style={{ flex: 1 }}>
         <ImageBackground
@@ -30,7 +49,9 @@ const PersonalScreen = (props) => {
             }}>
             </View>
             <TouchableOpacity
-                onPress={() => {
+                onPress={async () => {
+                    await clearLoginInfo()
+                    unsubDeviceToTopic()
                     navigate('LoginScreen')
                 }}
                 style={{

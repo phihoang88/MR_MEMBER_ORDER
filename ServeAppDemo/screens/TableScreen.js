@@ -7,10 +7,12 @@ import {
     StyleSheet
 } from 'react-native'
 import { images, apis, colors, contents } from '../config'
-import { ModalDialog,Toast } from '../components'
+import { ModalDialog, Toast } from '../components'
 import TableItem from './subScreens/TableItem'
 import Icon from 'react-native-vector-icons/FontAwesome5'
 import axios from 'axios'
+import { requestUserPermission, NotificationListener } from '../lib/pushnotification_helper'
+import messaging from '@react-native-firebase/messaging'
 
 const TableScreen = (props) => {
 
@@ -31,6 +33,23 @@ const TableScreen = (props) => {
 
     //set init dialog receive call
     const [isShowReceive, setShowReceive] = useState(false)
+
+    useEffect(() => {
+        requestUserPermission()
+        NotificationListener()
+    },[])
+
+    //get device token
+    useEffect(() => {
+        const unsubscribe = messaging().onMessage(async remoteMessage => {
+            //reload
+            setRefreshing(false)
+            callGet()
+        });
+        return unsubscribe;
+    }, [])
+
+
 
     //init load function
     useEffect(() => {
@@ -86,7 +105,7 @@ const TableScreen = (props) => {
     return <View style={styles.container}>
         <ImageBackground
             source={{
-                uri:images.backgroundApp
+                uri: images.backgroundApp
             }}
             style={styles.container}>
             <View style={styles.note_bg}>
@@ -126,7 +145,7 @@ const TableScreen = (props) => {
                                     'table_info_id': item.table_info_id,
                                     'table_nm': item.table_nm_vn,
                                     'table_stt': item.table_stt_nm,
-                                    'note_tx' : item.note_tx
+                                    'note_tx': item.note_tx
                                 })
                             }
                         }}
@@ -137,12 +156,12 @@ const TableScreen = (props) => {
                 progressViewOffset={100}
             />
         </ImageBackground>
-        <ModalDialog 
+        <ModalDialog
             visible={isShowReceive}
             children={{
-                title : 'Receive this call?',
-                message : `Table ${selectedTableNm} is calling...`,
-                type : 'yes/no'
+                title: 'Receive this call?',
+                message: `Table ${selectedTableNm} is calling...`,
+                type: 'yes/no'
             }}
             onYes={() => {
                 setShowReceive(false)

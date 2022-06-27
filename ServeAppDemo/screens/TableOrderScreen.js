@@ -18,6 +18,7 @@ import Icon from 'react-native-vector-icons/FontAwesome5'
 import { MealItem, MenuItem, TableOrderItem } from '../screens'
 import { ModalDialog, Toast } from '../components'
 import axios from 'axios'
+import { getLoginInfo } from '../lib/pushnotification_helper'
 
 const TableOrderScreen = (props) => {
 
@@ -25,6 +26,8 @@ const TableOrderScreen = (props) => {
     //set move screen navigate
     const { navigation, route } = props
     const { navigate, goBack } = navigation
+    //get userId
+    const [userId, setUserId] = useState('')
 
     //get pass params
     const table_id = route.params.table_id
@@ -72,6 +75,7 @@ const TableOrderScreen = (props) => {
 
     //init load
     useEffect(() => {
+        getUserId()
         //initload
         if (tableInfoId != null) {
             setNote(route.params.note_tx)
@@ -122,6 +126,12 @@ const TableOrderScreen = (props) => {
             SetShowKeyBoard(false)
         })
     })
+
+    const getUserId = async () => {
+        let data = await getLoginInfo()
+        setUserId(data.userId)
+    }
+
     //get List Menu
     const callGetListMenu = async () => {
         try {
@@ -173,7 +183,7 @@ const TableOrderScreen = (props) => {
                         callPutUpdateTableStatus(4)
                     }
                 }
-                else{
+                else {
                     setListOrderTmp([])
                 }
             }
@@ -199,8 +209,8 @@ const TableOrderScreen = (props) => {
                     "orderDt": system.systemDateString(),
                     "orderTm": system.systemTimeString(),
                     "crtDt": system.systemDateTimeString(),
-                    "crtUserId": "huy",
-                    "crtPgmId": "table order",
+                    "crtUserId": userId,
+                    "crtPgmId": system.TABLE_ORDER_SCREEN,
                     "delFg": "0"
                 }))
             if (orderList.length == 0) {
@@ -232,8 +242,8 @@ const TableOrderScreen = (props) => {
                 "isEnd": "0",
                 "noteTx": txtNote,
                 "crtDt": system.systemDateTimeString(),
-                "crtUserId": "huy",
-                "crtPgmId": "order",
+                "crtUserId": userId,
+                "crtPgmId": system.TABLE_ORDER_SCREEN,
                 "delFg": "0"
             })
             if (res.data.status == contents.status_ok) {
@@ -285,10 +295,6 @@ const TableOrderScreen = (props) => {
             const res = await axios.put(`${apis.TABLE_INFO_PATH}/updateStt/${tableInfoId}`, {
                 "tableStatusId": tableSttId
             })
-            if (res.data.status == contents.status_ok) {
-            }
-            else {
-            }
         } catch (error) {
             console.log(`callPutUpdateTableStatus ${error}`)
         }
