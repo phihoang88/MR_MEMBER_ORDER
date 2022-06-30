@@ -1,6 +1,6 @@
 
 const REAL_URL = 'https://mresapi.herokuapp.com/api'
-const BASE_URL = 'http://192.168.1.4:5000/api'
+const BASE_URL = 'http://192.168.1.5:5000/api'
 const TOPIC_MEMBER = 'member'
 
 // const USER_PATH = `${BASE_URL}/User`
@@ -10,6 +10,7 @@ const TOPIC_MEMBER = 'member'
 // const RECEIPT_PATH = `${BASE_URL}/Receipt`
 // const TABLE_INFO_PATH = `${BASE_URL}/TableInfo`
 // const TABLE_ORDER_PATH = `${BASE_URL}/TableOrder`
+// const TABLE_BOOK_PATH = `${BASE_URL}/TableBook`
 
 // const NOTIFICATION_SUB = `${BASE_URL}/notification/subscribe`
 // const NOTIFICATION_UNSUB = `${BASE_URL}/notification/unsubscribe`
@@ -26,6 +27,7 @@ const TABLE_PATH = `${REAL_URL}/Table`
 const RECEIPT_PATH = `${REAL_URL}/Receipt`
 const TABLE_INFO_PATH = `${REAL_URL}/TableInfo`
 const TABLE_ORDER_PATH = `${REAL_URL}/TableOrder`
+const TABLE_BOOK_PATH = `${BASE_URL}/TableBook`
 
 const NOTIFICATION_SUB = `${REAL_URL}/notification/subscribe`
 const NOTIFICATION_UNSUB = `${REAL_URL}/notification/unsubscribe`
@@ -48,5 +50,6 @@ export default{
      NOTIFICATION_SEND_TO_TOPIC,
      NOTIFICATION_SEND_TO_DEVICE,
      DEVICE_TOKEN,
-     TOPIC_MEMBER
+     TOPIC_MEMBER,
+     TABLE_BOOK_PATH
 }

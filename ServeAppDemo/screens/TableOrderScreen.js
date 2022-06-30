@@ -234,7 +234,7 @@ const TableOrderScreen = (props) => {
     //callPost insert order list to DB
     const callPostInsertTableInfo = async () => {
         try {
-            const res = await axios.post(`${apis.TABLE_INFO_PATH}/insertOrUpdateBook`, {
+            const res = await axios.post(`${apis.TABLE_INFO_PATH}/insert`, {
                 "tableId": table_id,
                 "tableSttId": "4",//Ordering
                 "serveDate": system.systemDateString(),

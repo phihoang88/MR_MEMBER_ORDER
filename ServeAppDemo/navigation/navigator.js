@@ -17,6 +17,7 @@ import {
     LoginScreen,
     TableOrderScreen,
     ReceiptDetailScreen,
+    BookScreen
 } from '../screens'
 import Tabbar from './Tabbar';
 import {navigationRef} from './RootNavigation'
@@ -91,6 +92,7 @@ const navigator = (props) => {
             <Stack.Screen name={"LoginScreen"} component={LoginScreen} />
             <Stack.Screen name={"Tabbar"} component={Tabbar} />
             <Stack.Screen name={"TableOrderScreen"} component={TableOrderScreen} />
+            <Stack.Screen name={"BookScreen"} component={BookScreen} />
             <Stack.Screen name={"ReceiptDetailScreen"} component={ReceiptDetailScreen} />
         </Stack.Navigator>
     </NavigationContainer>
