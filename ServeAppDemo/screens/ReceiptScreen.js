@@ -10,7 +10,8 @@ import {
 import { apis, contents, images } from '../config'
 import { ReceiptItem } from '../screens'
 import axios from 'axios'
-
+import { requestUserPermission, NotificationListener } from '../lib/pushnotification_helper'
+import messaging from '@react-native-firebase/messaging'
 
 const ReceiptScreen = (props) => {
 
@@ -20,6 +21,21 @@ const ReceiptScreen = (props) => {
     // <-------------------------------initload---------------------------------START>
     const [listReceipt, setListReceipt] = useState([])
     const [isRefreshing, setRefreshing] = useState(false)
+
+    useEffect(() => {
+        requestUserPermission()
+        NotificationListener()
+    }, [])
+
+    //get device token
+    useEffect(() => {
+        const unsubscribe = messaging().onMessage(async remoteMessage => {
+            //reload
+            setRefreshing(false)
+            callGetTableOrderingList()
+        });
+        return unsubscribe;
+    }, [])
 
     //initload
     useEffect(() => {
@@ -41,28 +57,28 @@ const ReceiptScreen = (props) => {
         try {
             setRefreshing(true)
             const res = await axios.get(`${apis.RECEIPT_PATH}/getListOrderForReceipt`)
-            if(res.data.status == contents.status_ok){
+            if (res.data.status == contents.status_ok) {
                 setListReceipt(res.data.data.filter(item => item.is_end == 0))
             }
-            else{
+            else {
                 setListReceipt([])
             }
         }
-        catch(error){
+        catch (error) {
             console.log(`callGetTableOrderingList ${error}`)
         }
     }
 
     useEffect(() => {
         setRefreshing(false)
-    },[isRefreshing])
+    }, [isRefreshing])
     // <-------------------------------function---------------------------------END>
 
     return <View style={styles.container}>
         <ImageBackground
             style={styles.img_background}
             source={{
-                uri:images.backgroundApp
+                uri: images.backgroundApp
             }}>
             <FlatList
                 data={listReceipt}
@@ -71,9 +87,9 @@ const ReceiptScreen = (props) => {
                         receipt={item}
                         key={item.table_info_id}
                         index={index}
-                        onPress={()=>{
-                            navigate('ReceiptDetailScreen',{
-                                'receiptDetail' : item
+                        onPress={() => {
+                            navigate('ReceiptDetailScreen', {
+                                'receiptDetail': item
                             })
                         }}
                     />}

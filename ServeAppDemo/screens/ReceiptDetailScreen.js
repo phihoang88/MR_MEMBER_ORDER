@@ -15,11 +15,15 @@ import Icon from 'react-native-vector-icons/FontAwesome5'
 import { ReceiptDetailItem } from '../screens'
 import { useFocusEffect } from '@react-navigation/native'
 import axios from 'axios'
-import { Toast, ModalDialog } from '../components'
+import { Toast, ModalDialog, Notification } from '../components'
+import { getLoginInfo } from '../lib/pushnotification_helper'
+
 const ReceiptDetailScreen = (props) => {
 
     const { navigation, route } = props
     const { navigate, goBack } = navigation
+    //get userId
+    const [userId, setUserId] = useState('')
 
     //<-------------------------------initload-----------------------------START>
     //get pass value
@@ -51,6 +55,7 @@ const ReceiptDetailScreen = (props) => {
     const [isShowConfirm, setShowConfirm] = useState(false)
 
     useEffect(() => {
+        getUserId()
         const unsub = navigation.addListener('focus', () => {
             //goback
             calculateTotal()
@@ -60,6 +65,10 @@ const ReceiptDetailScreen = (props) => {
         return unsub
     }, [navigation])
 
+    const getUserId = async () => {
+        let data = await getLoginInfo()
+        setUserId(data.userId)
+    }
     //<-------------------------------initload-----------------------------END>
 
     // insert table T_Table_receipt
@@ -71,8 +80,8 @@ const ReceiptDetailScreen = (props) => {
                 "total": sumPrice,
                 "cash": cash,
                 "crtDt": system.systemDateTimeString(),
-                "crtUserId": "huy",
-                "crtPgmId": "Receipt Screen",
+                "crtUserId": userId,
+                "crtPgmId": system.RECEIPT_DETAIL_SCREEN,
                 "delFg": "0"
             })
             if (res.data.status == contents.status_ok) {
@@ -93,6 +102,7 @@ const ReceiptDetailScreen = (props) => {
         try {
             const res = await axios.put(`${apis.TABLE_INFO_PATH}/updateAfterCheckout/${table_info_id}`)
             if (res.data.status == contents.status_ok) {
+                await callNotification()
                 goBack()
             }
             else {
@@ -101,6 +111,23 @@ const ReceiptDetailScreen = (props) => {
         }
         catch (error) {
             console.log(error)
+        }
+    }
+
+    //callPost insert order list to DB
+    const callNotification = async () => {
+        try {
+            console.log(table_info_id)
+            const res = await axios.get(`${apis.TABLE_INFO_PATH}/getDeviceToken/${table_info_id}`)
+            if (res.data.status == 'success' && res.data.data) {
+                await Notification.callSendNotificationToDevice(res.data.data)
+            }
+            else {
+                Toast("Error")
+            }
+
+        } catch (error) {
+            console.log(`callNotification ${error}`)
         }
     }
 
@@ -491,7 +518,7 @@ const ReceiptDetailScreen = (props) => {
                         borderTopWidth: 1,
                         justifyContent: 'center',
                         alignItems: 'center',
-                        display:is_end == 0 ? 'flex' : 'none'
+                        display: is_end == 0 ? 'flex' : 'none'
                     }}>
                         <TouchableOpacity style={{
                             flex: 50,
@@ -509,16 +536,16 @@ const ReceiptDetailScreen = (props) => {
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={() => {
-                                const found = listProducts.some( item => item.product_order_stt_id == 0)
-                                if(found){
+                                const found = listProducts.some(item => item.product_order_stt_id == 0)
+                                if (found) {
                                     Toast('Table is serving...Try it later!')
                                 }
-                                if(cash == null || finalIncome == 0 || excessCash == 0){
+                                if (cash == null || finalIncome == 0 || excessCash == 0) {
                                     Toast('Please input cash!')
                                 }
-                                else{
+                                else {
                                     setShowConfirm(true)
-                                } 
+                                }
                             }}
                             style={{
                                 flex: 50,
@@ -538,18 +565,18 @@ const ReceiptDetailScreen = (props) => {
                 </View>
             </View>
         </View>
-        <ModalDialog 
+        <ModalDialog
             visible={isShowConfirm}
             children={{
                 title: contents.title_notice,
-                message: `Check out Table ${table_nm_vn}?` ,
-                type:'yes/no'
+                message: `Check out Table ${table_nm_vn}?`,
+                type: 'yes/no'
             }}
-            onYes={()=>{
+            onYes={() => {
                 setShowConfirm(false)
                 callPostReceipt()
             }}
-            onNo={()=>{
+            onNo={() => {
                 setShowConfirm(false)
             }}
         />

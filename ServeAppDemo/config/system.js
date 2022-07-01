@@ -27,10 +27,11 @@ const systemTimeString = (dateSelect) => {
 const getDateFormat = (dateSelect) => {
     let month = dateSelect.getMonth() + 1 < 10 ? `0${dateSelect.getMonth() + 1}` : dateSelect.getMonth() + 1
     let day = dateSelect.getDate() < 10 ? `0${dateSelect.getDate()}` : dateSelect.getDate()
-    return `${dateSelect.getFullYear()}/${month}/${day}`
+    return `${dateSelect.getFullYear()}-${month}-${day}`
 }
 // return HH:mm
 const getTimeFormat = (dateSelect) => {
+
     let hours = dateSelect.getHours() < 10 ? `0${dateSelect.getHours()}` : dateSelect.getHours()
     let minutes = dateSelect.getMinutes() < 10 ? `0${dateSelect.getMinutes()}` : dateSelect.getMinutes()
     return `${hours}:${minutes}`
@@ -54,7 +55,7 @@ const getTimeFormatFromString = (datetimeString) => {
     return dateSelect
 }
 
-//return HHmm => HH:mm
+//return HHmm => HH:mm:ss
 const getTimeFormatByString = (timeString) => {
     let hours = timeString.substring(0,2) + ":" + timeString.substring(2,4) + ":" + timeString.substring(4,6)
     return hours
@@ -65,6 +66,16 @@ const getDateTimeFormat = (date,time) => {
     return
 }
 
+const LOGIN_SCREEN = "MRE-FE-0011"
+const TABLE_SCREEN = "MRE-FE-0021"
+const TABLE_ORDER_SCREEN = "MRE-FE-0022"
+const RECEIPT_SCREEN = "MRE-FE-0023"
+const RECEIPT_DETAIL_SCREEN = "MRE-FE-0024"
+const BOOK_LIST_SCREEN = "MRE-FE-0030"
+const BOOK_SCREEN = "MRE-FE-0031"
+const PERSONAL_SCREEN = "MRE-FE-0040"
+
+
 export default{
     systemDateTimeString,
     systemDateString,
@@ -73,5 +84,13 @@ export default{
     getTimeFormat,
     getTimeFormatByString,
     getDateFormatFromString,
-    getTimeFormatFromString
+    getTimeFormatFromString,
+    LOGIN_SCREEN,
+    TABLE_SCREEN,
+    TABLE_ORDER_SCREEN,
+    RECEIPT_SCREEN,
+    RECEIPT_DETAIL_SCREEN,
+    BOOK_SCREEN,
+    BOOK_LIST_SCREEN,
+    PERSONAL_SCREEN
 }

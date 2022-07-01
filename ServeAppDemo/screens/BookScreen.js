@@ -7,7 +7,8 @@ import {
     Keyboard,
     TouchableOpacity,
     FlatList,
-    ImageBackground
+    ImageBackground,
+    Alert,
 } from 'react-native'
 
 import { images, apis, system, colors, contents } from '../config'
@@ -18,11 +19,17 @@ import DatePicker from 'react-native-date-picker'
 import Icon from 'react-native-vector-icons/FontAwesome5'
 
 import { ModalDialog, Toast } from '../components'
+import { getLoginInfo } from '../lib/pushnotification_helper'
 
 const BookScreen = (props) => {
 
     const { navigation, route } = props
     const { navigate, goBack } = navigation
+    //get userId
+    const [userId, setUserId] = useState('')
+
+    //get pass params
+    const [passBookData, setPassBookData] = useState(route.params.book)
 
     // <-----------------------InitLoad------------------------START>
     //set show key board
@@ -36,8 +43,8 @@ const BookScreen = (props) => {
     const [txtNote, setNote] = useState('')
 
     //set selected table
+    const [bookId, setBookId] = useState(null)
     const [tableIdSelected, setTableIdSelected] = useState('')
-    const [tableInfoId, setTableInfoId] = useState(null)
     const [tableNmSelected, setTableNmSelected] = useState('')
     const [selectedTableIndex, setSelectedTableIndex] = useState(null)
 
@@ -45,11 +52,11 @@ const BookScreen = (props) => {
     const [isShowDatePicker, setShowDatePicker] = useState(false)
     const [dateSelect, setDateSelect] = useState(new Date())
     //set show Time picker
-    const [isShowTimePicker, setShowTimePicker] = useState(false)
-    const [timeSelect, setTimeSelect] = useState(new Date())
+    const [isShowTimePickerFrom, setShowTimePickerFrom] = useState(false)
+    const [timeSelectFrom, setTimeSelectFrom] = useState(new Date())
+    const [isShowTimePickerTo, setShowTimePickerTo] = useState(false)
+    const [timeSelectTo, setTimeSelectTo] = useState(new Date())
     //set init validate message
-    const [msgError, setMsgError] = useState('')
-    const [isShowValidMsg, setShowValidMsg] = useState(false)
     const [isShowConfirmBook, setShowConfirmBook] = useState(false)
 
     //set init show confirm cancel 
@@ -57,16 +64,24 @@ const BookScreen = (props) => {
 
     //initload function
     useEffect(() => {
+        getUserId()
         const unsubscribe = navigation.addListener('focus', () => {
             //after goback
             //call Api load Table list
             callGetListTable()
+            handleUpdateBookData()
         });
         //initload
         //call Api load Table list
         callGetListTable()
+        handleUpdateBookData()
         return unsubscribe;
     }, [navigation])
+
+    const getUserId = async () => {
+        let data = await getLoginInfo()
+        setUserId(data.userId)
+    }
     // <-----------------------InitLoad------------------------END>
 
 
@@ -82,64 +97,142 @@ const BookScreen = (props) => {
         })
     })
 
+    //book table button handle
+    const onClickBookTable = () => {
+
+        dateSelect.setHours(
+            new Date().getHours() + 7,
+            new Date().getMinutes(), 0, 0)
+
+        const toDate = new Date(new Date().setHours(
+            new Date().getHours() + 7,
+            new Date().getMinutes(), 0, 0))
+
+        if (dateSelect < toDate) {
+            return alert('Cannot book past time!')
+        }
+
+        if (timeSelectFrom.getHours() > timeSelectTo.getHours()) {
+            return alert('Time from must be less than time to!')
+        }
+
+        if (timeSelectFrom.getHours() == timeSelectTo.getHours()) {
+            if (timeSelectFrom.getMinutes() > timeSelectTo.getMinutes()) {
+                return alert('Time from must be less than time to!')
+            }
+        }
+
+        if (dateSelect + '' == toDate + '') {
+            if (new Date().getHours() > timeSelectTo.getHours()) {
+                return alert('Time from must be less than time to!')
+            }
+            if (new Date().getHours() == timeSelectTo.getHours()) {
+                if (new Date().getMinutes() > timeSelectTo.getMinutes()) {
+                    return alert('Time from must be less than time to!')
+                }
+            }
+        }
+
+        if (tableNmSelected == '') {
+            return alert(contents.msg_warn_nonselect_table)
+        }
+        if (txtGuessNm == '') {
+            return alert(contents.msg_warn_empty_guess_nm)
+        }
+        if (txtGuessPhone == null) {
+            return alert(contents.msg_warn_empty_guess_phone)
+        }
+        if (txtGuessCount == 0) {
+            return alert(contents.msg_warn_empty_guess)
+        }
+
+        setShowConfirmBook(true)
+    }
+
+    const handleUpdateBookData = () => {
+        if (passBookData) {
+            setBookId(passBookData.bookId)
+            setTableIdSelected(passBookData.tableId)
+            setTableNmSelected(passBookData.tableNmVn || passBookData.tableNmEn || passBookData.tableNmJp)
+            onChangeGuessNm(passBookData.guessNm)
+            onChangeGuessPhone(passBookData.guessPhone)
+            setGuessCount(passBookData.guessCount)
+            setDateSelect(new Date(passBookData.bookDate))
+            setTimeSelectFrom(system.getTimeFormatFromString(
+                passBookData.bookDate.split("-").join("") + passBookData.bookTimeFrom.replace(":", "")
+            )
+            )
+            setTimeSelectTo(system.getTimeFormatFromString(
+                passBookData.bookDate.split("-").join("") + passBookData.bookTimeTo.replace(":", "")
+            )
+            )
+            setNote(passBookData.noteTx)
+        }
+    }
+
     //API get list table
     const callGetListTable = async () => {
         try {
-            const res = await axios.get(`${apis.TABLE_INFO_PATH}/getList`)
-            let objDt = res.data.data.filter(item => item.table_stt_nm == 'Emptying' || item.table_stt_nm == 'Booking')
-            setListTable(objDt)
+            const res = await axios.get(`${apis.TABLE_PATH}/getList`)
+            if (res.data.status == 'success') {
+                if (res.data.data != null) {
+                    setListTable(res.data.data.filter(item => item.delFg != '1'))
+                }
+                else {
+                    setListTable([])
+                }
+            }
+            else {
+                setListTable([])
+            }
         } catch (error) {
-            console.log(`${error.message}`)
+            console.log(`callGetListTable ${error.message}`)
         }
     }
 
     //callPost insert order list to DB
-    const callPostInsertTableInfo = async () => {
+    const callPostInsertTableBook = async () => {
         try {
-            const res = await axios.post(`${apis.TABLE_INFO_PATH}/insertOrUpdateBook`, {
-                "id": tableInfoId,
+            const res = await axios.post(`${apis.TABLE_BOOK_PATH}/insertOrUpdateBook`, {
+                "id": bookId,
                 "tableId": tableIdSelected,
-                "tableSttId": 2, //Booking
-                "bookDt": system.systemDateString(dateSelect),
-                "bookTm": system.systemTimeString(timeSelect),
+                "bookDate": system.getDateFormat(dateSelect),
+                "bookTimeFrom": system.getTimeFormat(timeSelectFrom),
+                "bookTimeTo": system.getTimeFormat(timeSelectTo),
                 "guessNm": txtGuessNm,
                 "guessCount": txtGuessCount,
                 "guessPhone": txtGuessPhone,
-                "isEnd": "0",
                 "noteTx": txtNote,
+                "isCancel": "0",
+                "isEnd": "0",
                 "crtDt": system.systemDateTimeString(),
-                "crtUserId": "huy",
-                "crtPgmId": "book screen",
+                "crtUserId": userId,
+                "crtPgmId": system.BOOK_SCREEN,
                 "delFg": "0"
             })
             if (res.data.status == contents.status_ok) {
-                //setTableInfoId(res.data.data.id)
-                callGetListTable()
+                // callGetListTable()
                 Toast(contents.msg_success_create_table)
+                goBack()
             }
             else {
-                Toast(contents.msg_err_create_table)
+                Toast(res.data.message)
             }
         } catch (error) {
-            console.log(`callPostInsertTableInfo ${error}`)
+            console.log(`callPostInsertTableBook ${error}`)
         }
     }
 
     // update table T_Table_info => cancel book
     const callPutCancelBookTable = async () => {
         try {
-            if(tableInfoId == null){
-                Toast("Please choose any booked table!")
-            } 
-            else{
-                const res = await axios.put(`${apis.TABLE_INFO_PATH}/updateAfterCheckout/${tableInfoId}`)
-                if (res.data.status == contents.status_ok) {
-                    callGetListTable()
-                    Toast("Cancel successfully!")
-                }
-                else {
-                    Toast("Cancel unsuccessfully!")
-                }
+            const res = await axios.put(`${apis.TABLE_BOOK_PATH}/cancelBook/${bookId}`)
+            if (res.data.status == contents.status_ok) {
+                Toast("Cancel successfully!")
+                goBack()
+            }
+            else {
+                Toast("Cancel unsuccessfully!")
             }
         }
         catch (error) {
@@ -149,21 +242,43 @@ const BookScreen = (props) => {
     //<-------------------------Function-------------------------END>
 
     return <View style={{ flex: 100 }}>
-        <ImageBackground style={{ flex: 100, padding: 5 }}
+        <ImageBackground style={{ flex: 100 }}
             source={{
                 uri: images.backgroundApp
             }}>
+            {/* Tabbar */}
+            <View style={styles.tabbar}>
+                {/* back button */}
+                <View style={{ flex: 10 }}>
+                    <TouchableOpacity
+                        style={styles.back_btn}
+                        onPress={() => {
+                            goBack()
+                        }}>
+                        <Icon name="chevron-left" size={18} color={'grey'}></Icon>
+                    </TouchableOpacity>
+                </View>
+                {/* tabbar content */}
+                <View style={styles.tabbar_title}>
+                    <Text style={styles.label}>
+                        Book a table
+                    </Text>
+                </View>
+            </View>
+
             {/* info */}
             <View style={{
-                flex: 60,
+                flex: 50,
                 borderWidth: 1,
-                marginBottom: 5,
                 borderRadius: 15,
                 paddingTop: 10,
                 paddingLeft: 10,
                 paddingRight: 10,
                 paddingBottom: 5,
-                backgroundColor: 'white'
+                backgroundColor: 'white',
+                marginTop: 5,
+                marginLeft: 5,
+                marginRight: 5,
             }}>
                 <View style={{ flex: 88, flexDirection: 'row' }}>
                     {/* LABEL */}
@@ -207,7 +322,7 @@ const BookScreen = (props) => {
                         <View style={[{ flex: 15 }, styles.center_mt5]}>
                             <TextInput
                                 placeholder='Please type guess name here...'
-                                onChangeText={onChangeGuessNm}
+                                onChangeText={(text) => onChangeGuessNm(text)}
                                 value={txtGuessNm}
                                 style={styles.input_content}
                                 maxLength={30} />
@@ -216,7 +331,7 @@ const BookScreen = (props) => {
                         <View style={[{ flex: 15 }, styles.center_mt5]}>
                             <TextInput
                                 placeholder='Please type guess phone here...'
-                                onChangeText={onChangeGuessPhone}
+                                onChangeText={(text) => onChangeGuessPhone(text)}
                                 value={txtGuessPhone}
                                 keyboardType='numeric'
                                 style={styles.input_content}
@@ -250,13 +365,13 @@ const BookScreen = (props) => {
                                     setGuessCount(txtGuessCount + 1)
                                 }}
                             >
-                                <Icon name='plus-circle' size={25} color={'green'} />
+                                <Icon name='plus-circle' size={25} color={'grey'} />
                             </TouchableOpacity>
                         </View>
                         {/* Date */}
                         <View style={[{ flex: 12, flexDirection: 'row' }, styles.center_mt5]}>
                             <View style={[{
-                                flex: 70,
+                                flex: 85,
                                 borderWidth: 1,
                                 borderRadius: 15,
                                 height: '100%'
@@ -266,7 +381,7 @@ const BookScreen = (props) => {
                                 >{system.getDateFormat(dateSelect)}</Text>
                             </View>
                             <View style={[{
-                                flex: 30,
+                                flex: 15,
                                 height: '100%',
                             }, styles.center_all]}>
                                 <TouchableOpacity
@@ -274,33 +389,65 @@ const BookScreen = (props) => {
                                         setShowDatePicker(true)
                                     }}
                                 >
-                                    <Icon name='calendar-alt' color={'green'} size={25} />
+                                    <Icon name='calendar-alt' color={'grey'} size={25} />
                                 </TouchableOpacity>
                             </View>
                         </View>
                         {/* Time */}
                         <View style={[{ flex: 12, flexDirection: 'row' }, styles.center_mt5]}>
                             <View style={[{
-                                flex: 70,
-                                borderWidth: 1,
-                                borderRadius: 15,
-                                height: '100%'
+                                flex: 50,
+                                height: '100%',
+                                flexDirection: 'row'
                             }, styles.center_all]}>
-                                <Text
-                                    style={styles.label_content}
-                                >{system.getTimeFormat(timeSelect)}</Text>
+                                <View style={[{
+                                    flex: 70,
+                                    borderWidth: 1,
+                                    borderRadius: 15,
+                                }, styles.center_all]}>
+                                    <Text
+                                        style={styles.label_content}
+                                    >{system.getTimeFormat(timeSelectFrom)}</Text>
+                                </View>
+                                <View style={[{
+                                    flex: 30,
+                                    height: '100%',
+                                }, styles.center_all]}>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setShowTimePickerFrom(true)
+                                        }}
+                                    >
+                                        <Icon name='clock' color={'grey'} size={25} />
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                             <View style={[{
-                                flex: 30,
+                                flex: 50,
                                 height: '100%',
+                                flexDirection: 'row'
                             }, styles.center_all]}>
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        setShowTimePicker(true)
-                                    }}
-                                >
-                                    <Icon name='calendar-alt' color={'green'} size={25} />
-                                </TouchableOpacity>
+                                <View style={[{
+                                    flex: 70,
+                                    borderWidth: 1,
+                                    borderRadius: 15,
+                                }, styles.center_all]}>
+                                    <Text
+                                        style={styles.label_content}
+                                    >{system.getTimeFormat(timeSelectTo)}</Text>
+                                </View>
+                                <View style={[{
+                                    flex: 30,
+                                    height: '100%',
+                                }, styles.center_all]}>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setShowTimePickerTo(true)
+                                        }}
+                                    >
+                                        <Icon name='clock' color={'grey'} size={25} />
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         </View>
                         {/* Note */}
@@ -322,42 +469,41 @@ const BookScreen = (props) => {
 
                     </View>
                 </View>
-                <View style={{ flex: 12 }}>
+                <View style={{ flex: 12, flexDirection: 'row' }}>
                     {/* Book button */}
-                    <View style={[{ flex: 15 }, styles.center_mt5]}>
+                    <View style={[{ flex: 50 }, styles.center_mt5]}>
                         <TouchableOpacity
                             onPress={() => {
-                                let msgErr = ''
-                                if (tableNmSelected == '') {
-                                    msgErr = msgErr + `${contents.msg_warn_nonselect_table}\n`
-                                }
-                                if (txtGuessNm == '') {
-                                    msgErr = msgErr + `${contents.msg_warn_empty_guess_nm}\n`
-                                }
-                                if (txtGuessPhone == null) {
-                                    msgErr = msgErr + `${contents.msg_warn_empty_guess_phone}\n`
-                                }
-                                if (txtGuessCount == 0) {
-                                    msgErr = msgErr + `${contents.msg_warn_empty_guess}\n`
-                                }
-                                if (msgErr != '') {
-                                    setMsgError(msgErr)
-                                    setShowValidMsg(true)
-                                }
-                                else {
-                                    setShowConfirmBook(true)
-                                }
+                                onClickBookTable()
                             }}
                             style={[{
                                 flex: 50,
                                 backgroundColor: 'green',
-                                width: '60%',
+                                width: '80%',
                                 borderRadius: 20
                             }, styles.center_all]}>
                             <Text style={{
                                 color: 'white',
                                 fontWeight: 'bold'
                             }}>BOOK TABLE</Text>
+                        </TouchableOpacity>
+                    </View>
+                    {/* Book button */}
+                    <View style={[{ flex: 50, display: bookId ? 'flex' : 'none' }, styles.center_mt5]}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setShowConfirmCancel(true)
+                            }}
+                            style={[{
+                                flex: 50,
+                                backgroundColor: 'red',
+                                width: '80%',
+                                borderRadius: 20
+                            }, styles.center_all]}>
+                            <Text style={{
+                                color: 'white',
+                                fontWeight: 'bold'
+                            }}>CANCEL BOOK</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -370,6 +516,7 @@ const BookScreen = (props) => {
                 borderRadius: 15,
                 display: isShowKeyBoard == true ? 'none' : 'flex',
                 padding: 5,
+                margin: 5,
                 backgroundColor: 'white'
             }}>
                 <FlatList
@@ -380,27 +527,28 @@ const BookScreen = (props) => {
                             table={item}
                             key={index}
                             index={index}
-                            selected={selectedTableIndex}
+                            selected={tableIdSelected}
                             onPress={() => {
                                 setSelectedTableIndex(index)
-                                setTableIdSelected(item.table_id)
-                                setTableInfoId(item.table_info_id)
-                                setTableNmSelected(item.table_nm_vn || item.table_nm_en || item.table_nm_jp)
-                                setGuessCount(item.guess_count ? parseInt(item.guess_count) : 0)
-                                onChangeGuessNm(item.guess_nm)
-                                onChangeGuessPhone(item.guess_phone)
-                                if (item.book_dt != null) {
-                                    setDateSelect(system.getDateFormatFromString(item.book_dt))
-                                    setTimeSelect(system.getTimeFormatFromString(item.book_dt + item.book_tm))
-                                }
-                                else {
-                                    setDateSelect(new Date())
-                                    setTimeSelect(new Date())
-                                }
-                                setNote(item.note_tx)
+                                setTableIdSelected(item.id)
+                                setTableNmSelected(item.tableNmVn || item.tableNmEn || item.tableNmJp)
+                                // setGuessCount(item.guess_count ? parseInt(item.guess_count) : 0)
+                                // onChangeGuessNm(item.guessNm)
+                                // onChangeGuessPhone(item.guess_phone)
+                                // if (item.book_dt != null) {
+                                //     setDateSelect(system.getDateFormatFromString(item.book_dt))
+                                //     setTimeSelectFrom(system.getTimeFormatFromString(item.book_dt + item.book_tm))
+                                //     setTimeSelectTo(system.getTimeFormatFromString(item.book_dt + item.book_tm))
+                                // }
+                                // else {
+                                //     setDateSelect(new Date())
+                                //     setTimeSelectFrom(new Date())
+                                //     setTimeSelectTo(new Date())
+                                // }
+                                // setNote(item.note_tx)
                             }}
                             onLongPress={() => {
-                                setShowConfirmCancel(true)
+                                // setShowConfirmCancel(true)
                             }}
                         />}
                 //keyExtractor={item => item.table_id}
@@ -426,25 +574,29 @@ const BookScreen = (props) => {
         <DatePicker
             modal
             mode='time'
-            open={isShowTimePicker}
-            date={timeSelect}
+            minuteInterval={15}
+            open={isShowTimePickerFrom}
+            date={timeSelectFrom}
             onConfirm={(date) => {
-                setShowTimePicker(false)
-                setTimeSelect(date)
+                setShowTimePickerFrom(false)
+                setTimeSelectFrom(date)
             }}
             onCancel={() => {
-                setShowTimePicker(false)
+                setShowTimePickerFrom(false)
             }}
         />
-        <ModalDialog
-            visible={isShowValidMsg}
-            children={{
-                title: contents.title_warning,
-                message: msgError,
-                type: 'ok'
+        <DatePicker
+            modal
+            mode='time'
+            minuteInterval={15}
+            open={isShowTimePickerTo}
+            date={timeSelectTo}
+            onConfirm={(date) => {
+                setShowTimePickerTo(false)
+                setTimeSelectTo(date)
             }}
-            onYes={() => {
-                setShowValidMsg(false)
+            onCancel={() => {
+                setShowTimePickerTo(false)
             }}
         />
         <ModalDialog
@@ -456,7 +608,7 @@ const BookScreen = (props) => {
             }}
             onYes={() => {
                 setShowConfirmBook(false)
-                callPostInsertTableInfo()
+                callPostInsertTableBook()
             }}
             onNo={() => {
                 setShowConfirmBook(false)
@@ -481,6 +633,40 @@ const BookScreen = (props) => {
 }
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 100
+    },
+    tabbar: {
+        flex: 7,
+        flexDirection: 'row',
+        height: '100%',
+        width: '100%',
+        backgroundColor: colors.color_app,
+        borderTopWidth: 1,
+        borderBottomWidth: 1,
+    },
+    back_btn: {
+        height: '100%',
+        width: '100%',
+        marginLeft: 20,
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+    },
+    tabbar_title: {
+        flex: 50,
+        justifyContent: 'flex-start',
+        alignSelf: 'center',
+        flexDirection: 'row',
+    },
+    label: {
+        color: 'black',
+        fontSize: 18
+    },
+    tabbar_nm: {
+        color: 'black',
+        fontWeight: 'bold',
+        textAlign: 'left'
+    },
     center_start: {
         justifyContent: 'center',
         alignItems: 'flex-start'

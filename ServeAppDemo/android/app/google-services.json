@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1011465447972",
+    "project_id": "order-app-9f2db",
+    "storage_bucket": "order-app-9f2db.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1011465447972:android:66d3094a3790b4605c86b1",
+        "android_client_info": {
+          "package_name": "com.serveappdemo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1011465447972-t86i3gp811d8g1b8n65qm0320mlvh709.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBu6TxayddvsctopF2FNU68ibW97OyXMYg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1011465447972-t86i3gp811d8g1b8n65qm0320mlvh709.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

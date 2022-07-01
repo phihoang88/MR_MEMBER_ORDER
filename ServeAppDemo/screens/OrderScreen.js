@@ -9,6 +9,8 @@ import {
 import { apis, images, contents } from '../config'
 import { ProductOrderItem } from '../screens'
 import axios from 'axios'
+import { requestUserPermission, NotificationListener } from '../lib/pushnotification_helper'
+import messaging from '@react-native-firebase/messaging'
 
 const OrderScreen = (props) => {
     const { navigation, route } = props
@@ -19,6 +21,21 @@ const OrderScreen = (props) => {
     const [listProductsOrder, setListProductsOrder] = useState([])
     //set refresh status
     const [isRefreshing, setRefreshing] = useState(false)
+
+    useEffect(() => {
+        requestUserPermission()
+        NotificationListener()
+    },[])
+
+    //get device token
+    useEffect(() => {
+        const unsubscribe = messaging().onMessage(async remoteMessage => {
+            //reload
+            setRefreshing(false)
+            callGetListProductOrder()
+        });
+        return unsubscribe;
+    }, [])
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('focus', () => {
