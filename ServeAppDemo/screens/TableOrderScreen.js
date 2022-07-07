@@ -240,6 +240,8 @@ const TableOrderScreen = (props) => {
                 "serveDate": system.systemDateString(),
                 "serveTime": system.systemTimeString(),
                 "isEnd": "0",
+                "isCalling" : "0",
+                "isCheckout": "0",
                 "noteTx": txtNote,
                 "crtDt": system.systemDateTimeString(),
                 "crtUserId": userId,
